@@ -811,7 +811,11 @@ with target_tab:
 # --- VIEW: MY TASKS (USER ONLY) ---
 if st.session_state['role'] != 'ADMIN':
     with tabs[2]:
-        st.header("📋 Tablero de Prioridades Personales")
+        if st.session_state['role'] == 'GOBIERNO':
+            st.header("📋 Tablero de Supervisión (Gobierno)")
+            st.caption("Visualizando actividades de todos los usuarios (Excepto Admin)")
+        else:
+            st.header("📋 Tablero de Prioridades Personales")
         
         df_all_tasks = get_table_df("activities")
         users_df = get_table_df("users")
@@ -842,6 +846,11 @@ if st.session_state['role'] != 'ADMIN':
             curr_name = role_map.get(curr_role, "")
             
             def is_mine(row):
+                # SPECIAL RULE: GOBIERNO sees everything EXCEPT Admin tasks
+                if curr_role == 'GOBIERNO':
+                    return row['primary_role'] != 'ADMIN'
+
+                # Standard Rule
                 if row['primary_role'] == curr_role: return True
                 co = str(row.get('co_responsibles', ''))
                 if curr_role in co: return True
