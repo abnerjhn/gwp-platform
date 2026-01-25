@@ -173,7 +173,7 @@ with tabs[0]:
         st.caption("Salud del Proyecto y Aseguramiento")
         h1, h2, h3, h4 = st.columns(4)
         h1.metric("Tiempo Transcurrido", f"{time_pct}%", f"Semana {int(weeks_passed)}", help="% de duración del proyecto consumido a la fecha")
-        h2.metric("Desviación Plan", f"{gap}%", "Avance vs Tiempo", delta_color="normal", help="Diferencia: (Progreso Real - Tiempo Transcurrido). \nVerde: Adelantado \nRojo: Atrasado")
+        h2.metric("Desviación Plan", f"{gap}%", f"{gap:+}% vs Tiempo", delta_color="normal", help="Diferencia: (Progreso Real - Tiempo Transcurrido). \nVerde: Adelantado \nRojo: Atrasado")
         h3.metric("Cobertura Documental", f"{ev_rate}%", ev_help, help="% de Entregables requeridos que ya tienen archivo cargado")
         h4.metric("Última Actividad", last_up, "Archivo Reciente", help="Fecha de la carga de evidencia más reciente")
         
