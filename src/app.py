@@ -72,12 +72,6 @@ else:
 # --- VIEW: LIVE MAP ---
 # --- VIEW: LIVE MAP ---
 with tabs[0]:
-    st.header("🗺️ Tablero de Control Visual")
-    st.caption("Organización por Fases del Proyecto")
-    
-    # Generate DF
-    map_df = get_table_df("activities")
-    
     # Generate DF
     map_df = get_table_df("activities")
     
