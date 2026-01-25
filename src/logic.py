@@ -151,7 +151,7 @@ def generate_graphviz_dot(df):
             dot.edge(dep, row['activity_code'], color='#666666')
             
     # 5. Force Vertical Stacking of Phases (Invisible Edges)
-    # Link the last node of Phase N to the first node of Phase N+1
+    # Link the clusters directly using lhead/ltail
     # This guarantees P0 is above P1, P1 above P2, etc.
     phase_ids = sorted([p for p in nodes_by_phase.keys() if nodes_by_phase[p]])
     
@@ -159,15 +159,15 @@ def generate_graphviz_dot(df):
         p_curr = phase_ids[i]
         p_next = phase_ids[i+1]
         
-        # Get a node from each
+        # Get a node from each (any node works as anchor for lhead/ltail)
         nodes_curr = nodes_by_phase[p_curr]
         nodes_next = nodes_by_phase[p_next]
         
         if nodes_curr and nodes_next:
-            # We pick the last one of current to first of next to maintain flow
             n_upper = nodes_curr[-1]['activity_code']
             n_lower = nodes_next[0]['activity_code']
             
-            dot.edge(n_upper, n_lower, style='invis', weight='50')
+            # CRITICAL: lhead/ltail forces the CLUSTERs to stack, not just nodes
+            dot.edge(n_upper, n_lower, style='invis', weight='100', ltail=f'cluster_{p_curr}', lhead=f'cluster_{p_next}')
 
     return dot
