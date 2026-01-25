@@ -262,17 +262,25 @@ with tabs[0]:
 
         # 2. Render Full View (Last Tab)
         with subtabs[-2]: # Now second to last
-            col1, col2 = st.columns([8, 2])
-            with col1: st.markdown("### Diagrama Completo")
-            with col2: 
-                # Controls
-                st.caption("Visualización")
-                orientation = st.radio("Orientación", ["Vertical (TB)", "Horizontal (LR)"], index=0)
-                # Apply previous swap fix: Vertical->LR, Horizontal->TB
-                rank_dir = "LR" if "Vertical" in orientation else "TB"
-                
-                sort_opt = st.selectbox("Orden Nodos", ["Original", "Por ID", "Por Fecha"])
-                group_phases = st.checkbox("Agrupar Fases", value=True)
+        # 2. Render Full View (Last Tab)
+        with subtabs[-2]: # Now second to last
+            st.markdown("### Diagrama Completo")
+            
+            # Controls Bar
+            with st.container():
+                c1, c2, c3 = st.columns([4, 3, 3])
+                with c1:
+                    orientation = st.radio("Orientación", ["Vertical (TB)", "Horizontal (LR)"], index=0, horizontal=True)
+                    # Apply previous swap fix: Vertical->LR, Horizontal->TB
+                    rank_dir = "LR" if "Vertical" in orientation else "TB"
+                with c2:
+                    sort_opt = st.selectbox("Orden Nodos", ["Original", "Por ID", "Por Fecha"])
+                with c3:
+                    st.write("") # Spacer for alignment
+                    st.write("")
+                    group_phases = st.checkbox("Agrupar Fases", value=True)
+            
+            st.divider()
             
             # Apply Sorting
             full_view_df = map_df.copy()
