@@ -1,0 +1,48 @@
+ID,Producto,Actividad ,Sem. inicio,Sem. fin,Tipo,Depende de,Evidencia ,Resp. primario,Co-responsables
+T-0.1,TRANS,Matriz integrada requisitos–evidencias–responsables + reglas de “DONE” (TDR operativo integrado),1,1,INT,—,Matriz + reglas + versionado,Astrid,"Patricio, Constanza"
+T-0.2,TRANS,Biblioteca documental del proyecto (estructura + tags + control de versiones),1,2,INT,—,Estructura repo + índice de documentos,Astrid,Todos
+T-0.3,TRANS,"Definir y calendarizar talleres (plan maestro: fechas, objetivos, listas)",2,5,INT,T-0.1,Plan de talleres + borradores agenda/listas,Astrid,"Patricio, Constanza, GOV"
+C-1.1-A,1.1,"Coordinar implementación técnica, coherencia metodológica, QA, articulación con contrapartes",1,22,INT,—,Registro QA + minutas seguimiento + decisiones,Astrid,Todos
+C-1.1-B,1.1,Reporte mensual (informes ejecutivos + reuniones de seguimiento con GWP),1,22,INT,—,Minutas + evidencia de avance,Astrid,Todos
+C-1.1-1,1.1,Evaluación de impacto diferenciado (base analítica),2,11,INT,—,Matriz análisis impacto + fuentes,Astrid,"Patricio, Constanza"
+C-1.1-2,1.1,Evaluación empoderamiento e inclusión de mujeres (base analítica),6,11,INT,T-0.3,Matriz inclusión + insumos talleres,Astrid,"Constanza, Patricio"
+C-1.1-3,1.1,Recomendaciones para fortalecer equidad de género,12,22,INT,G3,Documento recomendaciones + trazabilidad,Astrid,"Constanza, Patricio"
+C-IA1,1.1,Informe de avance 1 (mes 1),5,5,INT+DEP,"(C-1.1-A,B)",Informe v1 + anexos mínimos,Astrid,Todos
+C-IA2,1.1,"Informe de avance 2 (mes 2,5)",11,11,INT+DEP,G2,Informe v2 + anexos v0.8,Astrid,Todos
+C-IA3,1.1,Informe de avance 3 / final (mes 5),22,22,INT+DEP,(2.2/3.2 listos),Informe final + matriz cumplimiento,Astrid,Todos
+F-2.1-01,2.1,Propuesta detallada de mecanismos voluntarios (documento),9,11,INT+DEP,G2,Borrador v0.8 + versión final 2.1,Patricio,"Astrid, Constanza"
+F-2.1-02,2.1,Identificar objetivos NDC prioritarios + brechas/necesidades financieras,2,4,INT,—,Lista objetivos + brechas,Patricio,Astrid
+F-2.1-03,2.1,Benchmarking internacional (selección con CONAF por elegibilidad),1,4,IND-P,—,Matriz benchmarking + fichas casos,Patricio,—
+F-2.1-04,2.1,Mapeo partes interesadas e iniciativas (línea base/diagnóstico nacional),2,5,INT,—,Dataset/tabla actores + hallazgos,Patricio,"Astrid, Constanza"
+F-2.1-05,2.1,"Diseño participativo: plataformas de diálogo (privados, sociedad civil, MMA/CONAF)",6,10,INT+DEP,T-0.3,Registro mesas + acuerdos,Patricio,"Astrid, GOV"
+F-2.1-06,2.1,Análisis técnico del marco legal/programático (insumo),2,6,INT,—,Nota legal/insumo consolidado,Constanza,Patricio
+F-2.1-07,2.1,Identificar y convocar actores para mesas de co-creación (basado en mapeo),4,6,INT+DEP,F-2.1-04,Lista convocados + correos/actas,Astrid,Patricio
+F-2.1-08,2.1,Sesiones introductorias para actores (baseline de conocimiento),6,6,INT+DEP,F-2.1-07,Presentación + lista asistencia + acta,Astrid,"Patricio, GOV"
+F-2.1-09,2.1,"Talleres de co-creación (?3) con temas clave (modalidades, elegibilidad, gobernanza, trazabilidad, MRV, transparencia, incentivos)",7,9,INT+DEP,F-2.1-08,Actas + acuerdos + listas asistencia,Astrid,"Patricio, Constanza, GOV"
+F-2.1-10,2.1,Consolidar y validar propuestas con apoyo técnico y político,10,10,INT+DEP,F-2.1-09,Documento consolidación + validación,Patricio,"Astrid, GOV"
+F-2.1-11,2.1,Definir criterios de elegibilidad + coherencia técnico-financiera,10,11,INT+DEP,F-2.1-10,Matriz elegibilidad + reglas,Patricio,"Constanza, Astrid"
+F-2.1-12,2.1,Integrar transparencia y trazabilidad (sistema rendición de cuentas),10,11,INT+DEP,F-2.1-11,Diseño sistema trazabilidad + indicadores,Patricio,Astrid
+F-2.1-ENT,2.1,"Entrega Producto 2.1 (2,5 meses)",11,11,INT+DEP,G2,Documento final 2.1 + anexos,Patricio,"Astrid, Constanza"
+F-2.2-01,2.2,Construcción línea base financiamiento público-privado (restauración ecosistemas),6,14,IND,—,Dataset + reporte analítico,Patricio,—
+F-2.2-02,2.2,Recopilar datos históricos inversiones desde 2010,2,14,IND-P,—,Base histórica + fuentes,Patricio,—
+F-2.2-03,2.2,"Definir línea base de iniciativas/programas (actores, montos, beneficiarios, contribución NDC)",6,14,IND,F-2.2-02,Matriz iniciativas/programas,Patricio,Astrid
+F-2.2-04,2.2,Determinar brechas y escalar oportunidades según prioridades UTCUTS,12,15,IND+DEP,F-2.2-01/03,Análisis brechas/oportunidades,Patricio,Astrid
+F-2.2-05,2.2,Procedimientos paso a paso para ejecución por CONAF (por mecanismo),12,18,INT+DEP,G2,Procedimientos v0.9 + anexos,Patricio,"Astrid, GOV"
+F-2.2-06,2.2,Protocolos operativos por mecanismo (criterios técnicos/ambientales/sociales + validación territorial),12,18,INT+DEP,G2,Protocolos v0.9,Patricio,"Constanza, Astrid"
+F-2.2-07,2.2,"Manual institucional (roles, elegibilidad, evaluación, rendición cuentas, monitoreo)",13,19,INT+DEP,F-2.2-06,Manual v0.9?v1.0,Patricio,"Astrid, Constanza"
+F-2.2-08,2.2,Plataforma GIS (diseño + estructura),12,14,IND,—,Especificación GIS,Patricio,—
+F-2.2-09,2.2,"Plataforma GIS (carga, publicación, metadatos, enlaces)",14,18,IND+DEP,F-2.2-08 + datos,Enlaces servicios/capas + evidencia,Patricio,Astrid
+F-2.2-10,2.2,Talleres técnicos con CONAF/MMA para adopción e implementación (salvaguardas ambiental/social),16,19,INT+DEP,(F-2.2-05/06/07/09),Actas + acuerdos + condiciones,Astrid,"Patricio, GOV, Constanza"
+F-2.2-ENT,2.2,Entrega Producto 2.2 (5 meses),22,22,INT+DEP,G3,Documento final 2.2 + GIS + manual + protocolos,Patricio,"Astrid, Constanza"
+L-3.1-01,3.1,"Análisis técnico y jurídico marco legal/programático (condiciones habilitantes, brechas, oportunidades)",1,8,IND,—,Informe diagnóstico legal,Constanza,—
+L-3.1-02,3.1,"Recomendaciones de ajustes regulatorios/política pública para implementar mecanismos (efectiva, coherente, transparente)",6,11,INT+DEP,Insumos mecanismos,Recomendaciones + trazabilidad,Constanza,"Patricio, Astrid"
+L-3.1-03,3.1,(Mínimo del producto) Coherencia legislativa vs necesidades de financiamiento/restauración/monitoreo,7,11,IND+DEP,L-3.1-01,Sección coherencia legislativa,Constanza,—
+L-3.1-04,3.1,(Mínimo del producto) Sistematizar barreras regulatorias (acceso a financiamiento/participación privada),7,11,IND+DEP,L-3.1-01,Matriz barreras regulatorias,Constanza,—
+L-3.1-05,3.1,(Mínimo del producto) Propuesta reforma/ajuste normativo (implementación eficaz e inclusiva),8,11,INT+DEP,Talleres + mecanismos,Borrador reforma v0.8,Constanza,Astrid
+L-3.1-ENT,3.1,"Entrega Producto 3.1 (2,5 meses)",11,11,INT+DEP,G2,Documento final 3.1,Constanza,Astrid
+L-3.2-01,3.2,Determinar barreras estructurales para mujeres rurales y pueblos indígenas (durante análisis normativo),2,14,IND,—,Diagnóstico barreras,Constanza,Astrid
+L-3.2-02,3.2,"Recomendaciones inclusión (cuotas, indicadores obligatorios, medidas afirmativas)",15,19,INT+DEP,L-3.2-01 + diseño mecanismos,Paquete recomendaciones,Constanza,"Astrid, Patricio"
+L-3.2-03,3.2,Mecanismos formales de voz y voto (desarrollo/implementación/monitoreo),15,19,INT+DEP,L-3.2-01 + talleres,Diseño institucional,Constanza,"Astrid, GOV"
+L-3.2-ENT,3.2,Entrega Producto 3.2 (5 meses),22,22,INT+DEP,G3,Documento final 3.2,Constanza,Astrid
+G-INT-01,TRANS,Checklist inclusión por mecanismo (aplica a 2.1 y a la operación 2.2),6,19,INT+DEP,Talleres y fichas,Checklists firmados,Astrid/Constanza,Patricio
+G-INT-02,TRANS,Matriz cumplimiento final (requisito ? evidencia ? versión),20,22,INT+DEP,(todos),Matriz cumplimiento,Astrid,Todos

@@ -1,0 +1,148 @@
+sequenceDiagram
+    autonumber
+
+    actor P as PATRICIO_Finanzas
+    participant L as CONSTANZA_Legal
+    participant A as ASTRID_Coord_QA
+    participant G as INCLUSION_Genero
+    participant GOV as CONAF_MMA_Gobierno
+    participant GIS as GIS_Mapa
+    participant APP as APP_REPO_Docs_Evidencias
+
+    Note over P,APP: FASE 0 (SEM 1) ARRANQUE - Sistema Operativo
+    A->>APP: Crea Matriz Integrada requisitos-evidencias-responsables
+    A->>APP: Define GATES (G1 Baseline, G2 Mecanismos v0.8, G3 Validacion+Evidencias)
+    A->>APP: Crea estructura documental y versionado (v0.x, v0.8, v1.0)
+    A->>APP: Inicia Biblioteca Documental (indice, tags, control versiones)
+
+    Note over P,APP: IND-P en paralelo desde el dia 1 (no dependen de otros)
+    P->>APP: Inicia Benchmarking internacional (casos, elegibilidad, lecciones)
+    P->>APP: Inicia Recopilacion datos historicos desde 2010 (base 2.2)
+
+    Note over P,APP: FASE 1 (SEM 2-5) BASELINE MINIMA - Paralelo (convergencia en G1)
+    par Finanzas - Baseline NDC y Actores
+        P->>APP: Identifica objetivos NDC prioritarios y brechas financieras
+        P->>APP: Mapeo partes interesadas e iniciativas (linea base diagnostico)
+    and Legal - Marco habilitante
+        L->>APP: Analisis tecnico-juridico marco legal/programatico (brechas y oportunidades)
+        L->>APP: Lista de restricciones (fatal flaws) y condiciones habilitantes
+    and Inclusion/Genero - Checklist base
+        G->>APP: Criterios y salvaguardas de inclusion (checklist base)
+    and Coordinacion - Planificacion de participacion
+        A->>APP: Plan maestro de talleres (fechas, objetivos, listas preliminares)
+    end
+
+    Note over P,APP: HITO 1.1 (MES 1) Informe de Avance 1 - gatillo de pago
+    A->>APP: Entrega Informe Avance 1 (impacto diferenciado) + evidencias minimas
+    APP-->>A: Confirmacion informe versionado y registrado
+
+    Note over P,APP: GATE G1 - Baseline minima lista (sin esto no se inventa)
+    APP-->>A: Estado Gate G1 (OK o Faltantes)
+    alt Gate G1 tiene faltantes
+        A-->>P: Solicita ajustes baseline finanzas (objetivos/actores/brechas)
+        A-->>L: Solicita ajustes baseline legal (brechas/condiciones)
+        A-->>G: Solicita ajustes checklist base inclusion
+        P->>APP: Ajustes baseline finanzas
+        L->>APP: Ajustes baseline legal
+        G->>APP: Ajustes checklist base
+        APP-->>A: Reevalua Gate G1
+    else Gate G1 OK
+        A->>APP: Marca Gate G1 como cumplido
+    end
+
+    Note over P,APP: FASE 2 (SEM 6-11) FABRICA DE MECANISMOS (2.1 y 3.1) + Talleres (>=3)
+    Note over P,APP: DEP convocatoria depende de mapeo de actores (baseline)
+    A->>APP: Lista convocados y confirmaciones (evidencia convocatoria)
+    A->>GOV: Coordina ventana y formato de talleres (agenda preliminar)
+    A->>APP: Sesion introductoria (material + lista asistencia + minuta)
+
+    loop Talleres de co-creacion (minimo 3)
+        A->>GOV: Facilita taller (mesa de co-creacion)
+        P->>APP: Registra insumos del taller (opciones, necesidades, incentivos)
+        L->>APP: Registra implicaciones legales preliminares del taller
+        G->>APP: Registra brechas y ajustes de inclusion por opciones
+        A->>APP: Sube acta, acuerdos, lista asistencia, decisiones
+    end
+
+    Note over P,APP: Iteracion por mecanismo (fichas, screening, inclusion) -> Gate G2
+    loop Por cada mecanismo candidato
+        P->>APP: Crea/actualiza ficha mecanismo (flujo, gobernanza, MRV, trazabilidad)
+        P->>L: Solicita screening legal del mecanismo
+        alt No viable legalmente
+            L-->>P: Rechaza + motivo + condicion de ajuste
+            L->>APP: Registra riesgo legal y recomendacion
+            P->>APP: Ajusta ficha (pivot) y reitera
+        else Viable con condiciones
+            L-->>P: Aprueba condicionado (ajustes requeridos)
+            L->>APP: Adjunta nota legal del mecanismo (screening)
+            P->>G: Solicita revision inclusion por mecanismo
+            alt No inclusivo
+                G-->>P: Rechaza + brecha + ajuste requerido
+                G->>APP: Registra recomendacion inclusion
+                P->>APP: Ajusta ficha (beneficiarios/criterios) y reitera
+            else Inclusion OK
+                G-->>P: Aprueba inclusion
+                G->>APP: Adjunta checklist firmado por mecanismo
+                APP-->>A: Solicita QA Gate G2 para el mecanismo
+                A->>APP: Marca mecanismo APROBADO v0.8 (o devuelve observaciones)
+            end
+        end
+    end
+
+    Note over P,APP: Consolidacion final del paquete 2.1 (criterios + trazabilidad) y 3.1 (ajustes normativos)
+    P->>APP: Define criterios de elegibilidad y coherencia tecnico-financiera
+    P->>APP: Disena sistema transparencia y trazabilidad (rendicion de cuentas)
+    L->>APP: Redacta recomendaciones y propuesta de ajustes normativos (borrador 3.1)
+    A->>APP: QA de consistencia (mecanismos v0.8 + evidencias + acuerdos talleres)
+
+    Note over P,APP: HITO 2.5 MESES Entregas 2.1 y 3.1 + Informe 1.1 Avance 2
+    P->>APP: Entrega Producto 2.1 (mecanismos voluntarios v0.8)
+    L->>APP: Entrega Producto 3.1 (mejoras/ajustes normativos v0.8)
+    A->>APP: Entrega Informe Avance 2 (empoderamiento e inclusion) + anexos v0.8
+    APP-->>A: Confirmacion entregas 2.5m versionadas y registradas
+
+    Note over P,APP: FASE 3 (SEM 12-20) CARPINTERIA PESADA (2.2 y 3.2) + Validacion tecnica Gobierno
+    Note over P,APP: Aqui se vuelve cobrable: linea base 2010+, GIS, protocolos, manual, procedimientos, talleres adopcion
+    par Linea base 2.2 (finanzas) en paralelo
+        P->>APP: Construye linea base financiamiento publico-privado (iniciativas/programas)
+        P->>APP: Completa base historica 2010+ (fuentes, normalizacion)
+        P->>APP: Analiza brechas y oportunidades para escalar segun prioridades UTCUTS
+    and Operacionalizacion por mecanismo (depende de v0.8)
+        P->>APP: Procedimientos paso a paso para ejecucion CONAF por mecanismo
+        P->>APP: Protocolos operativos por mecanismo (criterios tecnicos/ambientales/sociales)
+        P->>APP: Manual institucional (roles, elegibilidad, evaluacion, rendicion cuentas, monitoreo)
+    and GIS (diseno + publicacion)
+        P->>GIS: Disena estructura GIS (capas, metadatos, modelo)
+        P->>GIS: Carga y publica capas/datos (visualizacion georreferenciada)
+        GIS-->>APP: Registra enlaces a servicios/capas + evidencia de publicacion
+    and Inclusion formal 3.2 (legal) en paralelo
+        L->>APP: Determina barreras estructurales mujeres rurales y pueblos indigenas
+        L->>APP: Formula recomendaciones inclusion (cuotas, indicadores, medidas afirmativas)
+        L->>APP: Disena mecanismos formales de voz y voto (desarrollo/implementacion/monitoreo)
+    end
+
+    Note over P,APP: Talleres tecnicos de adopcion/implementacion con Gobierno (depende de borradores operativos)
+    A->>GOV: Agenda talleres tecnicos de adopcion (CONAF/MMA)
+    A->>APP: Sube convocatoria, agenda y listas asistencia (evidencia)
+    GOV-->>A: Observaciones y condiciones de adopcion
+    A->>APP: Sube actas, acuerdos, decisiones y condiciones
+    APP-->>P: Notifica ajustes requeridos en procedimientos/protocolos/manual/GIS
+    APP-->>L: Notifica ajustes requeridos en inclusion institucional/normativa
+
+    Note over P,APP: GATE G3 Validacion Gobierno + Evidencias completas
+    APP-->>A: Checklist Gate G3 (GIS publicado + manual/protocolos + actas + inclusion formal)
+    alt Gate G3 tiene faltantes
+        A-->>P: Solicita correcciones finales (operacion/GIS/manuales)
+        A-->>L: Solicita correcciones finales (inclusion formal/medidas/voz-voto)
+        P->>APP: Sube correcciones finales y versiona
+        L->>APP: Sube correcciones finales y versiona
+        APP-->>A: Reevalua Gate G3
+    else Gate G3 OK
+        A->>APP: Marca Gate G3 como cumplido
+    end
+
+    Note over P,APP: FASE 4 (SEM 21-22) CIERRE v1.0 - Entregas finales 5 meses
+    P->>APP: Entrega Producto 2.2 v1.0 (linea base final + GIS + manual + protocolos + procedimientos + talleres)
+    L->>APP: Entrega Producto 3.2 v1.0 (barreras + recomendaciones + mecanismos formales voz-voto)
+    A->>APP: Entrega Informe Avance 3 / Informe Final 1.1 (recomendaciones equidad genero)
+    APP-->>A: Genera matriz cumplimiento final (requisito -> evidencia -> version)

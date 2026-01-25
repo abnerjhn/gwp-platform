@@ -1,0 +1,36 @@
+activity_code,phase_id,product_code,task_name,type_tag,responsible_role,week_start,week_end,evidence_expected,is_gate_blocker,dependencies_text
+T-0.1,1,TRANS,Matriz integrada requisitos–evidencias–responsables,INT,COORD,1,1,Matriz + reglas + versionado,TRUE,-
+T-0.2,1,TRANS,Biblioteca documental del proyecto,INT,COORD,1,2,Estructura repo + índice,FALSE,-
+T-0.3,1,TRANS,Definir y calendarizar talleres,INT,COORD,2,5,Plan de talleres,FALSE,T-0.1
+C-1.1-A,1,1.1,Coordinar implementación técnica y QA,INT,COORD,1,22,Registro QA + minutas,FALSE,-
+P-2.1-01,1,2.1,Benchmarking internacional mecanismos,IND,FINANZAS,1,1,Matriz benchmarking,FALSE,-
+P-2.2-01,1,2.2,Recopilación datos históricos desde 2010,IND,FINANZAS,2,14,Base de datos histórica,FALSE,-
+L-3.1-01,1,3.1,Análisis técnico-jurídico marco legal y brechas,IND,LEGAL,1,1,Reporte preliminar legal,FALSE,-
+L-3.2-01,2,3.2,Determinar barreras estructurales mujeres/indígenas,IND,LEGAL,2,14,Diagnóstico barreras,FALSE,-
+P-2.1-02,2,2.1,Identificar objetivos NDC + brechas financieras,INT,FINANZAS,2,3,Informe brechas,FALSE,P-2.1-01
+P-2.1-03,2,2.1,Mapeo de partes interesadas e iniciativas,INT,FINANZAS,2,3,Mapa de actores,TRUE,-
+L-3.1-02,2,3.1,Fatal Flaws Legales (Prohibiciones explícitas),INT,LEGAL,2,3,Lista de chequeo fatal flaws,TRUE,L-3.1-01
+G-3.2-01,2,3.2,Checklist base de inclusión (criterios salvaguarda),IND,COORD,1,2,Checklist v1,TRUE,-
+P-2.1-04,2,2.1,Convocatoria actores para co-creación,DEP,FINANZAS,4,5,Listas convocatoria + invitaciones,FALSE,P-2.1-03
+C-1.1-IA1,2,1.1,Informe de Avance 1 (Mes 1),INT,COORD,5,5,Informe Avance 1 PDF,TRUE,GATE 1
+P-2.1-05,3,2.1,Sesiones introductorias actores convocados,INT,FINANZAS,6,6,Presentación + Asistencia,FALSE,P-2.1-04
+P-2.1-06,3,2.1,Diseño participativo: plataformas de diálogo,INT,FINANZAS,6,6,Acta constitución mesa,FALSE,-
+P-2.1-07,3,2.1,CICLO TALLERES CO-CREACIÓN (Mínimo 3),INT+DEP,FINANZAS,7,9,Actas talleres + fotos,TRUE,P-2.1-06
+L-3.1-03,3,3.1,Screening Legal Iterativo (Análisis viabilidad),IND+DEP,LEGAL,7,11,Sección coherencia legislativa,TRUE,L-3.1-01
+L-3.1-04,3,3.1,Sistematizar barreras regulatorias,IND+DEP,LEGAL,7,11,Matriz barreras regulatorias,FALSE,L-3.1-01
+G-3.2-CHECK,3,3.2,Aplicación Checklist Inclusión por Mecanismo,INT,COORD,7,9,Checklists firmados,TRUE,G-3.2-01
+P-2.1-08,3,2.1,Consolidar y validar propuestas,INT+DEP,FINANZAS,10,10,Fichas mecanismos v0.8,TRUE,P-2.1-07
+P-2.1-ENT,3,2.1,Entrega Producto 2.1 (Mecanismos v0.8),INT+DEP,FINANZAS,11,11,Documento final 2.1,TRUE,G2
+L-3.1-ENT,3,3.1,Entrega Producto 3.1 (Legal v0.8),INT+DEP,LEGAL,11,11,Documento final 3.1,TRUE,G2
+C-1.1-IA2,3,1.1,Informe de Avance 2 (2.5 Meses),INT,COORD,11,11,Informe Avance 2 PDF,TRUE,P-2.1-ENT
+P-2.2-02,4,2.2,Línea base de iniciativas/programas,IND,FINANZAS,6,14,Matriz línea base programas,FALSE,P-2.1-03
+P-2.2-04,4,2.2,Procedimientos paso a paso CONAF,INT+DEP,FINANZAS,12,18,Borrador procedimientos,FALSE,P-2.1-ENT
+P-2.2-05,4,2.2,Protocolos operativos por mecanismo,INT+DEP,FINANZAS,12,18,Borrador protocolos,FALSE,P-2.1-ENT
+P-2.2-GIS,4,2.2,Diseño y Carga Plataforma GIS,IND+DEP,FINANZAS,12,18,Link a plataforma / Screenshots,TRUE,P-2.2-02
+L-3.1-05,3,3.1,Propuesta reforma/ajuste normativo,INT+DEP,LEGAL,8,11,Borrador reforma v0.8,FALSE,Talleres
+L-3.2-02,4,3.2,Recomendaciones inclusión (cuotas/medidas),INT+DEP,LEGAL,15,19,Paquete recomendaciones,FALSE,L-3.2-01
+L-3.2-03,4,3.2,Mecanismos formales de voz y voto,INT+DEP,LEGAL,15,19,Propuesta institucional,FALSE,-
+P-2.2-07,4,2.2,Talleres Técnicos Adopción con Gobierno,INT+DEP,COORD,16,19,Actas validación gobierno,TRUE,P-2.2-04
+P-2.2-ENT,5,2.2,Entrega Final 2.2 (Pack Operativo),INT+DEP,FINANZAS,21,22,Pack Final 2.2,TRUE,G3
+L-3.2-ENT,5,3.2,Entrega Final 3.2 (Pack Normativo),INT+DEP,LEGAL,21,22,Pack Final 3.2,TRUE,G3
+C-1.1-FIN,5,1.1,Informe Final y Cierre,INT+DEP,COORD,22,22,Informe Final Consolidado,TRUE,ALL

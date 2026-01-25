@@ -1,0 +1,6 @@
+streamlit
+pandas
+supabase
+graphviz
+altair
+python-dotenv
