@@ -764,16 +764,28 @@ if st.session_state['role'] == 'ADMIN':
                 prod_map[r['code']] = label
                 prod_options.append(label)
         
-        # 2. Roles: "Role" (Or Name if preferred, but schema uses Role currently)
-        # Requirement: "Assign Roles". Schema column is 'primary_role' which stores 'COORD', etc.
-        # But user wants to pick names? If schema stores Role, sticking to Role or Role list.
-        # Optimizing: Let's show "COORD", "FINANZAS" but ensure they come from Users table roles (distinct)
-        user_roles = users_df['role'].unique().tolist() if not users_df.empty else ["COORD", "FINANZAS"]
+        # 2. Users: Build Name ↔ Role mappings
+        user_names = []
+        name_to_role = {}
+        role_to_name = {}
+        if not users_df.empty:
+            for _, u in users_df.iterrows():
+                user_names.append(u['full_name'])
+                name_to_role[u['full_name']] = u['role']
+                role_to_name[u['role']] = u['full_name']
         
         # --- APPLY MAPPING TO DATAFRAME FOR DISPLAY ---
-        # We replace the raw codes with the friendly labels in the DF *before* showing the editor
         display_df = acts_df.copy()
         display_df['product_code'] = display_df['product_code'].map(prod_map).fillna(display_df['product_code'])
+        
+        # Fill primary_responsible from role if empty (backcompat)
+        if 'primary_responsible' not in display_df.columns:
+            display_df['primary_responsible'] = display_df['primary_role'].map(role_to_name).fillna(display_df['primary_role'])
+        else:
+            # Fill nulls
+            display_df['primary_responsible'] = display_df['primary_responsible'].fillna(
+                display_df['primary_role'].map(role_to_name)
+            )
         
         dep_codes = acts_df['activity_code'].tolist() if not acts_df.empty else []
 
@@ -784,19 +796,22 @@ if st.session_state['role'] == 'ADMIN':
             num_rows="dynamic",
             use_container_width=True,
             column_config={
-
-                "id": st.column_config.NumberColumn("ID Interno", disabled=True),
-                "activity_code": st.column_config.TextColumn("Código", required=True),
+                "id": st.column_config.NumberColumn("ID", disabled=True, width="small"),
+                "activity_code": st.column_config.TextColumn("Código", required=True, width="small"),
                 "product_code": st.column_config.SelectboxColumn("Producto", options=prod_options, required=True, width="medium"),
-                "primary_role": st.column_config.SelectboxColumn("Rol Responsable", options=user_roles, required=True),
+                "primary_responsible": st.column_config.SelectboxColumn("👤 Responsable", options=user_names, required=True, width="medium"),
+                "primary_role": st.column_config.TextColumn("Rol (Auto)", disabled=True, width="small"),
+                "co_responsibles": st.column_config.TextColumn("🤝 Co-Responsables", help="Nombres separados por coma", width="medium"),
                 "dependency_code": st.column_config.SelectboxColumn("Dependencia", options=dep_codes),
-                "type_tag": st.column_config.SelectboxColumn("Tipo", options=["INT", "IND", "DEP", "INT+DEP", "IND+DEP", "IND-P"]),
+                "type_tag": st.column_config.TextColumn("Tipo (Auto)", disabled=True, width="small"),
                 "status": st.column_config.SelectboxColumn("Estado", options=["PENDING", "IN_PROGRESS", "BLOCKED", "DONE"]),
                 "evidence_requirement": st.column_config.SelectboxColumn("Evidencia Req.", options=["SI", "NO"]),
                 "has_file_uploaded": st.column_config.CheckboxColumn("📂?", disabled=True)
             },
             hide_index=True
         )
+        
+        st.caption("💡 Al guardar: El **Rol** se auto-llena desde el Responsable, y el **Tipo** se calcula desde Dependencias y Co-Responsables.")
         
         if st.button("💾 Guardar Cronograma"):
             try:
@@ -811,6 +826,14 @@ if st.session_state['role'] == 'ADMIN':
                     return val
                 
                 save_df['product_code'] = save_df['product_code'].apply(unpack_product)
+                
+                # --- AUTO-FILL ROLE FROM RESPONSIBLE NAME ---
+                def get_role_from_name(name):
+                    if pd.isna(name) or str(name).strip() in ['', 'nan', 'None']:
+                        return None
+                    return name_to_role.get(str(name).strip(), None)
+                
+                save_df['primary_role'] = save_df['primary_responsible'].apply(get_role_from_name)
                 
                 # --- AUTO-CALCULATE TYPE TAG ---
                 def compute_type_tag(row):
@@ -847,7 +870,7 @@ if st.session_state['role'] == 'ADMIN':
                 # Prepare payload
                 # We only want to save columns that exist in DB + ID
                 # (Streamlit adds _index sometimes)
-                valid_cols = ['id', 'activity_code', 'product_code', 'task_name', 'week_start', 'week_end', 'type_tag', 'dependency_code', 'primary_role', 'status', 'evidence_requirement']
+                valid_cols = ['id', 'activity_code', 'product_code', 'task_name', 'week_start', 'week_end', 'type_tag', 'dependency_code', 'primary_role', 'primary_responsible', 'co_responsibles', 'status', 'evidence_requirement']
                 # Filter cols
                 final_records = []
                 for _, row in save_df.iterrows():
