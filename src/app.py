@@ -487,13 +487,16 @@ if st.session_state['role'] == 'ADMIN':
             num_rows="dynamic",
             use_container_width=True,
             column_config={
+            column_config={
                 "id": st.column_config.NumberColumn("ID Interno", disabled=True),
                 "activity_code": st.column_config.TextColumn("Código", required=True),
                 "product_code": st.column_config.SelectboxColumn("Producto", options=prod_options, required=True, width="medium"),
                 "primary_role": st.column_config.SelectboxColumn("Rol Responsable", options=user_roles, required=True),
                 "dependency_code": st.column_config.SelectboxColumn("Dependencia", options=dep_codes),
                 "type_tag": st.column_config.SelectboxColumn("Tipo", options=["INT", "IND", "DEP", "INT+DEP", "IND+DEP", "IND-P"]),
-                "status": st.column_config.SelectboxColumn("Estado", options=["PENDING", "IN_PROGRESS", "BLOCKED", "DONE"])
+                "status": st.column_config.SelectboxColumn("Estado", options=["PENDING", "IN_PROGRESS", "BLOCKED", "DONE"]),
+                "evidence_requirement": st.column_config.SelectboxColumn("Evidencia Req.", options=["SI", "NO"]),
+                "has_file_uploaded": st.column_config.CheckboxColumn("📂?", disabled=True)
             },
             hide_index=True
         )
@@ -515,7 +518,7 @@ if st.session_state['role'] == 'ADMIN':
                 # Prepare payload
                 # We only want to save columns that exist in DB + ID
                 # (Streamlit adds _index sometimes)
-                valid_cols = ['id', 'activity_code', 'product_code', 'task_name', 'week_start', 'week_end', 'type_tag', 'dependency_code', 'primary_role', 'status']
+                valid_cols = ['id', 'activity_code', 'product_code', 'task_name', 'week_start', 'week_end', 'type_tag', 'dependency_code', 'primary_role', 'status', 'evidence_requirement']
                 # Filter cols
                 final_records = []
                 for _, row in save_df.iterrows():
