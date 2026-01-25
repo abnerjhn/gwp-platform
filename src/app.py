@@ -643,7 +643,7 @@ with target_tab:
                         st.error(msg_up)
 
     # --- HELPER: Render Board ---
-    def render_board(dataframe):
+    def render_board(dataframe, key_suffix="main"):
         if dataframe.empty:
             st.info("No hay actividades en esta sección.")
             return
@@ -704,7 +704,7 @@ with target_tab:
                             st.markdown(f"**{row['activity_code']}** {row['task_name']}")
                         with c_act:
                             btn_icon = "📎" if has_evidence else "➕"
-                            if st.button(btn_icon, key=f"btn_ev_{row['id']}", help="Gestionar Evidencias", type="tertiary"):
+                            if st.button(btn_icon, key=f"btn_ev_{key_suffix}_{row['id']}", help="Gestionar Evidencias", type="tertiary"):
                                 evidence_dialog(row, is_mine, st.session_state['role'])
 
                         # Row 2: Meta + Navigation
@@ -725,7 +725,7 @@ with target_tab:
                             if status not in ['PENDING', 'BLOCKED']:
                                 prev_stat = 'PENDING'
                                 if status == 'DONE': prev_stat = 'IN_PROGRESS'
-                                if c_b_prev.button("◀", key=f"prev_{row['id']}", help="Regresar"):
+                                if c_b_prev.button("◀", key=f"prev_{key_suffix}_{row['id']}", help="Regresar"):
                                     update_activity_status_flow(row['id'], prev_stat)
                                     st.rerun()
 
@@ -747,7 +747,7 @@ with target_tab:
                                         can_move = False
                                         help_txt = msg
                                 
-                                if c_b_next.button("▶", key=f"next_{row['id']}", disabled=not can_move, help=help_txt):
+                                if c_b_next.button("▶", key=f"next_{key_suffix}_{row['id']}", disabled=not can_move, help=help_txt):
                                     update_activity_status_flow(row['id'], next_stat)
                                     st.rerun()
 
@@ -764,9 +764,10 @@ with target_tab:
     current_role = st.session_state['role']
     
     # Helper to render chosen view
-    def render_content(df):
+    # Helper to render chosen view
+    def render_content(df, key_suffix="main"):
         if view_mode == "Kanban":
-            render_board(df)
+            render_board(df, key_suffix)
         else:
             if df.empty:
                 st.info("No hay datos para mostrar en el cronograma.")
@@ -796,15 +797,15 @@ with target_tab:
         subtab1, subtab2, subtab3 = st.tabs(["👑 Mis Responsabilidades", "🤝 Co-Responsables", "📚 Todas"])
         
         with subtab1:
-            render_content(df_primary)
+            render_content(df_primary, "user_primary")
             
         with subtab2:
-            render_content(df_co)
+            render_content(df_co, "user_co")
             
         with subtab3:
             # Combine both
             df_all = pd.concat([df_primary, df_co]).drop_duplicates(subset=['id'])
-            render_content(df_all)
+            render_content(df_all, "user_all")
 
 # --- VIEW: MY TASKS (USER ONLY) ---
 if st.session_state['role'] != 'ADMIN':
