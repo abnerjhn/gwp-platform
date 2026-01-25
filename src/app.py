@@ -132,6 +132,39 @@ with tabs[0]:
         m3.metric("Bloqueadas", blocked_count, delta_color="inverse")
         m4.metric("Retrasadas", delayed, delta_color="inverse")
         
+        # --- HEALTH & AUDIT METRICS ---
+        weeks_total = max(1, PROJECT_DURATION * 4.33) # Avg weeks/month
+        weeks_passed = max(0, (today - PROJECT_START).days / 7)
+        time_pct = min(100, int((weeks_passed / weeks_total) * 100))
+        
+        gap = progress - time_pct # +Ahead, -Behind
+        
+        # Documentation Compliance
+        files_ref = get_all_evidence()
+        acts_with_files = set(f['activity_code'] for f in files_ref) if files_ref else set()
+        done_tasks = d_df[d_df['status'] == 'DONE']
+        if len(done_tasks) > 0:
+            done_w_file = done_tasks['activity_code'].isin(acts_with_files).sum()
+            ev_rate = int((done_w_file / len(done_tasks)) * 100)
+        else:
+            ev_rate = 100 # Start fresh
+            
+        # Recent Activity
+        last_up = "-"
+        if files_ref:
+            # Sort to be sure
+            f_srtd = sorted(files_ref, key=lambda x: x['uploaded_at'], reverse=True)
+            l_d = datetime.fromisoformat(f_srtd[0]['uploaded_at']).date()
+            last_up = "Hoy" if l_d == today else l_d.strftime('%d/%m')
+
+        # Row 1.5: Health Indicators
+        st.caption("Salud del Proyecto y Aseguramiento")
+        h1, h2, h3, h4 = st.columns(4)
+        h1.metric("Tiempo Transcurrido", f"{time_pct}%", f"Semana {int(weeks_passed)}")
+        h2.metric("Desviación Plan", f"{gap}%", "Avance vs Tiempo", delta_color="normal")
+        h3.metric("Integridad Documental", f"{ev_rate}%", "Tareas Listas con Evidencia")
+        h4.metric("Última Actividad", last_up, "Archivo Reciente")
+        
         st.divider()
         
         # Row 2: Charts (Visualizations)
