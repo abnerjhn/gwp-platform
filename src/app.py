@@ -133,12 +133,12 @@ with tabs[0]:
         
         with c_chart1:
             st.subheader("Estado de Actividades")
-            # Custom Colors
+            # Custom Colors (Soft Pastel)
             s_data = pd.DataFrame([
-                {"Estado": "Pendiente", "Cantidad": real_pending_count, "Color": "#95a5a6"}, # Grey
-                {"Estado": "En Progreso", "Cantidad": in_prog, "Color": "#3498db"}, # Blue
-                {"Estado": "Bloqueado", "Cantidad": blocked_count, "Color": "#e74c3c"}, # Red
-                {"Estado": "Listo", "Cantidad": done, "Color": "#2ecc71"} # Green
+                {"Estado": "Pendiente", "Cantidad": real_pending_count, "Color": "#cfd8dc"}, # Soft Grey
+                {"Estado": "En Progreso", "Cantidad": in_prog, "Color": "#90caf9"}, # Soft Blue
+                {"Estado": "Bloqueado", "Cantidad": blocked_count, "Color": "#ef9a9a"}, # Soft Red
+                {"Estado": "Listo", "Cantidad": done, "Color": "#a5d6a7"} # Soft Green
             ])
             
             c_status = alt.Chart(s_data).mark_bar().encode(
@@ -163,7 +163,7 @@ with tabs[0]:
             c_role = alt.Chart(r_counts).mark_bar().encode(
                 x=alt.X('Nombre', sort='-y', title="Responsable"),
                 y='Cantidad',
-                color=alt.Color('Nombre', legend=None),
+                color=alt.Color('Nombre', legend=None, scale=alt.Scale(scheme='set2')),
                 tooltip=['Nombre', 'Cantidad']
             )
             st.altair_chart(c_role, use_container_width=True)
