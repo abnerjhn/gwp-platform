@@ -151,6 +151,8 @@ with tabs[0]:
                                 </div>
                                 {svg}
                             </div>
+                            <!-- Hidden Data Block for Download -->
+                            <script id="raw_svg_data" type="text/plain">{svg}</script>
                             <script>
                                 (function() {{
                                     var container = document.getElementById('{container_id}');
