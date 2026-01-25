@@ -78,15 +78,10 @@ with tabs[0]:
     # Generate DF
     map_df = get_table_df("activities")
     
+    # Generate DF
+    map_df = get_table_df("activities")
+    
     if not map_df.empty:
-        # Create Tabs for each Phase + Full View + Critical Path
-        phase_tabs_names = [p['name'] for p in PHASES_CONFIG.values()]
-        phase_tabs_names.append("🔭 VISTA COMPLETA")
-        phase_tabs_names.append("🔗 RUTA CRÍTICA")
-        
-        # Create Streamlit Tabs
-        subtabs = st.tabs(phase_tabs_names)
-        
         # Helper to render
         def render_tab_content(current_df, key_suffix, is_full=False, group_by_phases=True, rankdir='TB'):
             if current_df.empty:
@@ -250,140 +245,90 @@ with tabs[0]:
             except Exception as e:
                 st.error(f"Error generando gráfico: {e}")
 
-        # 1. Render Individual Phases
-        for i, (p_id, p_info) in enumerate(PHASES_CONFIG.items()):
-            with subtabs[i]:
-                # Filter Logic: Week based
-                # Ensure week_start is numeric
-                condition = map_df['week_start'].fillna(0).astype(int).between(p_info['start'], p_info['end'])
-                subset = map_df[condition]
-                
-                render_tab_content(subset, f"p{p_id}")
+        # Just one main view now
+        
+        # --- VIEW: PROCESS MAP (Previously Full View) ---
+        st.markdown("### 🗺️ Mapa de Procesos Integrado")
+        
+        # Controls Bar
+        with st.container():
+            # Row 1: Phase Filter
+            all_phase_names = [p['name'] for p in PHASES_CONFIG.values()]
+            selected_phases = st.multiselect("Filtrar por Fases", all_phase_names, default=all_phase_names)
 
-        # 2. Render Full View (Last Tab)
+            # Row 2: Display Options
+            c1, c2, c3, c4 = st.columns([3, 3, 2, 2])
+            with c1:
+                orientation = st.radio("Orientación", ["Vertical (TB)", "Horizontal (LR)"], index=0, horizontal=True)
+                # Apply previous swap fix: Vertical->LR, Horizontal->TB
+                rank_dir = "LR" if "Vertical" in orientation else "TB"
+            with c2:
+                selected_statuses = st.multiselect("Filtrar Estado", ["PENDING", "IN_PROGRESS", "DONE"], default=["PENDING", "IN_PROGRESS", "DONE"])
+            with c3:
+                st.write("") # Spacer
+                st.write("")
+                group_phases = st.checkbox("Agrupar Fases", value=True)
+            with c4:
+                st.write("")
+                st.write("")
+                only_connected = st.checkbox("Solo Conexiones", value=False)
+        
+        st.divider()
+        
+        # --- DATA PROCESSING ---
+        full_view_df = map_df.copy()
 
-        # 2. Render Full View (Last Tab)
-        with subtabs[-2]: # Now second to last
-            st.markdown("### Diagrama Completo")
+        # 1. Filter by Phases
+        if not selected_phases:
+            st.warning("⚠️ Selecciona al menos una fase para visualizar.")
+            full_view_df = pd.DataFrame()
+        else:
+            # Build list of allowed weeks based on selected phases
+            allowed_weeks = []
+            for p_name in selected_phases:
+                for p_cfg in PHASES_CONFIG.values():
+                    if p_cfg['name'] == p_name:
+                        allowed_weeks.extend(range(p_cfg['start'], p_cfg['end'] + 2)) # Safety margin
             
-            # Controls Bar
-            with st.container():
-                # Row 1: Phase Filter
-                all_phase_names = [p['name'] for p in PHASES_CONFIG.values()]
-                selected_phases = st.multiselect("Filtrar por Fases", all_phase_names, default=all_phase_names)
-
-                # Row 2: Display Options
-                c1, c2, c3, c4 = st.columns([3, 3, 2, 2])
-                with c1:
-                    orientation = st.radio("Orientación", ["Vertical (TB)", "Horizontal (LR)"], index=0, horizontal=True)
-                    # Apply previous swap fix: Vertical->LR, Horizontal->TB
-                    rank_dir = "LR" if "Vertical" in orientation else "TB"
-                with c2:
-                    selected_statuses = st.multiselect("Filtrar Estado", ["PENDING", "IN_PROGRESS", "DONE"], default=["PENDING", "IN_PROGRESS", "DONE"])
-                with c3:
-                    st.write("") # Spacer
-                    st.write("")
-                    group_phases = st.checkbox("Agrupar Fases", value=True)
-                with c4:
-                    st.write("")
-                    st.write("")
-                    only_connected = st.checkbox("Solo Conexiones", value=False)
+            # Filter Week
+            full_view_df['week_start'] = full_view_df['week_start'].fillna(0).astype(int)
+            full_view_df = full_view_df[full_view_df['week_start'].isin(allowed_weeks)]
             
-            st.divider()
-            
-            # --- DATA PROCESSING ---
-            full_view_df = map_df.copy()
-
-            # 1. Filter by Phases
-            if not selected_phases:
-                st.warning("⚠️ Selecciona al menos una fase para visualizar.")
-                full_view_df = pd.DataFrame()
+            # Filter Status
+            if selected_statuses:
+                full_view_df = full_view_df[full_view_df['status'].isin(selected_statuses)]
             else:
-                # Build list of allowed weeks based on selected phases
-                allowed_weeks = []
-                for p_name in selected_phases:
-                    for p_cfg in PHASES_CONFIG.values():
-                        if p_cfg['name'] == p_name:
-                            allowed_weeks.extend(range(p_cfg['start'], p_cfg['end'] + 2)) # Safety margin
-                
-                # Filter Week
-                full_view_df['week_start'] = full_view_df['week_start'].fillna(0).astype(int)
-                full_view_df = full_view_df[full_view_df['week_start'].isin(allowed_weeks)]
-                
-                # Filter Status
-                if selected_statuses:
-                    full_view_df = full_view_df[full_view_df['status'].isin(selected_statuses)]
-                else:
-                    full_view_df = pd.DataFrame() # No status selected = empty
+                full_view_df = pd.DataFrame() # No status selected = empty
 
-            # 2. Filter Critical Path (Only Connected)
-            if only_connected and not full_view_df.empty:
-                # Strict Referential Integrity Filter
-                def normalize_dep(val):
-                    s = str(val).strip()
-                    if pd.isna(val) or s in ['-', '?', 'nan', 'None', '', '0']: return None
-                    return s
-                
-                analysis_df = full_view_df.copy()
-                analysis_df['clean_dep'] = analysis_df['dependency_code'].apply(normalize_dep)
-                
-                # Valid codes are only those CURRENTLY in the view (after phase filter)
-                valid_codes = set(analysis_df['activity_code'].astype(str).unique())
-                analysis_df['valid_dep'] = analysis_df['clean_dep'].apply(lambda x: x if x in valid_codes else None)
-                
-                is_valid_child = analysis_df['valid_dep'].notna()
-                valid_parents = set(analysis_df['valid_dep'].dropna().unique())
-                is_valid_parent = analysis_df['activity_code'].astype(str).isin(valid_parents)
-                
-                full_view_df = analysis_df[is_valid_child | is_valid_parent].copy()
-
-            # 3. Apply Sorting (ALWAYS BY WEEK/DATE + INTERNAL ID)
-            if not full_view_df.empty:
-                full_view_df = full_view_df.sort_values(['week_start', 'id'])
-            
-            render_tab_content(full_view_df, "full", is_full=True, group_by_phases=group_phases, rankdir=rank_dir)
-
-        # 3. Critical Path / Connected View
-        with subtabs[-1]:
-            st.markdown("### 🔗 Ruta Crítica (Solo Conexiones)")
-            
-            # STRICT FILTERING Logic
-            # 1. Clean dependencies to avoid false positives with '-', 'nan', etc.
+        # 2. Filter Critical Path (Only Connected)
+        if only_connected and not full_view_df.empty:
+            # Strict Referential Integrity Filter
             def normalize_dep(val):
-                if pd.isna(val): return None
                 s = str(val).strip()
-                if s in ['-', '?', 'nan', 'None', '', '0']: return None
+                if pd.isna(val) or s in ['-', '?', 'nan', 'None', '', '0']: return None
                 return s
             
-            # Work on a copy to filter
-            analysis_df = map_df.copy()
+            analysis_df = full_view_df.copy()
             analysis_df['clean_dep'] = analysis_df['dependency_code'].apply(normalize_dep)
             
-            # 2. Identify Parents (nodes that are pointed to)
-            # CRITICAL FIX: Only consider dependencies that ACTUALLY EXIST in the dataset
-            # Otherwise, a node pointing to a non-existent parent appears loose (edge not drawn) but passes the filter.
-            
+            # Valid codes are only those CURRENTLY in the view (after phase filter)
             valid_codes = set(analysis_df['activity_code'].astype(str).unique())
-            
-            # Filter dependencies: Keep only those that point to a valid code
             analysis_df['valid_dep'] = analysis_df['clean_dep'].apply(lambda x: x if x in valid_codes else None)
             
-            # 3. Apply Conditions
-            # cond1: I am a child of a VALID parent
             is_valid_child = analysis_df['valid_dep'].notna()
-            
-            # cond2: I am a parent of a VALID child (someone points to me using a valid ref)
             valid_parents = set(analysis_df['valid_dep'].dropna().unique())
             is_valid_parent = analysis_df['activity_code'].astype(str).isin(valid_parents)
             
-            # Keep nodes that are part of a VALID COMPLETED relationship (either side)
-            connected_pool = analysis_df[is_valid_child | is_valid_parent].copy()
-            
-            if not connected_pool.empty:
-                # Pass group_by_phases=False to remove cluster boxes
-                render_tab_content(current_df=connected_pool, key_suffix="critical", is_full=True, group_by_phases=False)
-            else:
-                st.info("No hay dependencias registradas para mostrar un flujo conectado.")
+            full_view_df = analysis_df[is_valid_child | is_valid_parent].copy()
+
+        # 3. Apply Sorting (ALWAYS BY WEEK/DATE + INTERNAL ID)
+        if not full_view_df.empty:
+            full_view_df = full_view_df.sort_values(['week_start', 'id'])
+        
+        render_tab_content(full_view_df, "main_map", is_full=True, group_by_phases=group_phases, rankdir=rank_dir)
+        
+    else:
+        st.info("No hay datos de actividades cargados en el sistema.")
             
     else:
         st.warning("No hay datos para generar el mapa.")
