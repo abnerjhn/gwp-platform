@@ -487,7 +487,7 @@ if st.session_state['role'] == 'ADMIN':
             num_rows="dynamic",
             use_container_width=True,
             column_config={
-            column_config={
+
                 "id": st.column_config.NumberColumn("ID Interno", disabled=True),
                 "activity_code": st.column_config.TextColumn("Código", required=True),
                 "product_code": st.column_config.SelectboxColumn("Producto", options=prod_options, required=True, width="medium"),
