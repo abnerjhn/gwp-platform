@@ -652,10 +652,18 @@ with target_tab:
         statuses = ["PENDING", "IN_PROGRESS", "BLOCKED", "DONE"]
         labels = ["😴 Pendiente", "🔨 En Progreso", "🔒 Bloqueado", "✅ Listo"]
         
+        # Visual Bucketing (Move Blocked Pending -> Blocked Column)
+        buckets = {s: [] for s in statuses}
+        for _, row in dataframe.iterrows():
+            s = row['status']
+            if s == 'PENDING' and check_is_blocked(row, df_acts):
+                s = 'BLOCKED'
+            if s in buckets: buckets[s].append(row)
+
         for i, status in enumerate(statuses):
             with cols[i]:
                 st.markdown(f"### {labels[i]}")
-                subset = dataframe[dataframe['status'] == status]
+                subset = pd.DataFrame(buckets[status]) if buckets[status] else pd.DataFrame()
                 
                 for _, row in subset.iterrows():
                     is_blocked = check_is_blocked(row, df_acts) # Uses the GLOBAL df_acts 
