@@ -88,13 +88,13 @@ with tabs[0]:
         subtabs = st.tabs(phase_tabs_names)
         
         # Helper to render
-        def render_tab_content(current_df, key_suffix, is_full=False, group_by_phases=True):
+        def render_tab_content(current_df, key_suffix, is_full=False, group_by_phases=True, rankdir='TB'):
             if current_df.empty:
                 st.warning("No hay actividades registradas para esta fase.")
                 return
 
             try:
-                dot = generate_graphviz_dot(current_df, group_by_phases=group_by_phases)
+                dot = generate_graphviz_dot(current_df, group_by_phases=group_by_phases, rankdir=rankdir)
                 if dot:
                     # RENDER STRATEGY: Embed SVG in scrollable HTML container
                     # This allows scrolling large diagrams instead of shrinking them
@@ -262,8 +262,13 @@ with tabs[0]:
 
         # 2. Render Full View (Last Tab)
         with subtabs[-2]: # Now second to last
-            st.markdown("### Diagrama Completo")
-            render_tab_content(map_df, "full", is_full=True, group_by_phases=False)
+            col1, col2 = st.columns([8, 2])
+            with col1: st.markdown("### Diagrama Completo")
+            with col2: 
+                orientation = st.radio("Orientación", ["Vertical (TB)", "Horizontal (LR)"], label_visibility="collapsed")
+                rank_dir = "TB" if "Vertical" in orientation else "LR"
+            
+            render_tab_content(map_df, "full", is_full=True, group_by_phases=False, rankdir=rank_dir)
 
         # 3. Critical Path / Connected View
         with subtabs[-1]:

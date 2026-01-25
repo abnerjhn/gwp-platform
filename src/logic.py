@@ -69,17 +69,18 @@ PHASES_CONFIG = {
     4: {"name": "FASE 4: CIERRE",       "start": 21, "end": 999}
 }
 
-def generate_graphviz_dot(df, group_by_phases=True):
+def generate_graphviz_dot(df, group_by_phases=True, rankdir='TB'):
     """
     Generates Graphviz Graph object for the Live Process Map.
     group_by_phases: If True, uses clusters + spine. If False, flat structure (better for critical path).
+    rankdir: 'TB' (Top-Bottom) or 'LR' (Left-Right).
     """
     if df.empty: return None
     
     # 1. Init Graph
     dot = graphviz.Digraph(comment='Plan Integrado')
     dot.attr(compound='true')
-    dot.attr(rankdir='TB') 
+    dot.attr(rankdir=rankdir) 
     dot.attr(splines='polyline') 
     dot.attr(nodesep='0.5')
     dot.attr(ranksep='0.8')
