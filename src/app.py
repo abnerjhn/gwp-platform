@@ -323,7 +323,8 @@ with tabs[0]:
 
 # --- VIEW: FILE MANAGER ---
 # Common for all
-with tabs[2]:
+file_tab_idx = 2 if st.session_state['role'] == 'ADMIN' else 3
+with tabs[file_tab_idx]:
     st.header("📂 Gestor Documental Centralizado")
     
     files = get_all_evidence()
