@@ -265,11 +265,23 @@ with tabs[0]:
             col1, col2 = st.columns([8, 2])
             with col1: st.markdown("### Diagrama Completo")
             with col2: 
-                orientation = st.radio("Orientación", ["Vertical (TB)", "Horizontal (LR)"], label_visibility="collapsed")
+                # Controls
+                st.caption("Visualización")
+                orientation = st.radio("Orientación", ["Vertical (TB)", "Horizontal (LR)"], index=0)
+                # Apply previous swap fix: Vertical->LR, Horizontal->TB
                 rank_dir = "LR" if "Vertical" in orientation else "TB"
-                group_phases = st.checkbox("Agrupar por Fases", value=True)
+                
+                sort_opt = st.selectbox("Orden Nodos", ["Original", "Por ID", "Por Fecha"])
+                group_phases = st.checkbox("Agrupar Fases", value=True)
             
-            render_tab_content(map_df, "full", is_full=True, group_by_phases=group_phases, rankdir=rank_dir)
+            # Apply Sorting
+            full_view_df = map_df.copy()
+            if sort_opt == "Por ID":
+                full_view_df = full_view_df.sort_values('activity_code')
+            elif sort_opt == "Por Fecha":
+                full_view_df = full_view_df.sort_values(['week_start', 'activity_code'])
+            
+            render_tab_content(full_view_df, "full", is_full=True, group_by_phases=group_phases, rankdir=rank_dir)
 
         # 3. Critical Path / Connected View
         with subtabs[-1]:
