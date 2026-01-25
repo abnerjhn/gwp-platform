@@ -115,6 +115,8 @@ def generate_graphviz_dot(df):
             # This node forces alignment
             anchor_name = f'anchor_{p_id}'
             c.node(anchor_name, label='', style='invis', shape='point', width='0', group='spine')
+            # Force anchor to be at the top of the cluster (Expert Technique 1)
+            c.body.append(f'{{ rank=source; {anchor_name}; }}')
             
             for row in rows:
                 # -- STYLE LOGIC --
@@ -160,8 +162,8 @@ def generate_graphviz_dot(df):
     for i in range(len(active_phases) - 1):
         u = f'anchor_{active_phases[i]}'
         v = f'anchor_{active_phases[i+1]}'
-        # High weight to enforce straight line
-        dot.edge(u, v, style='invis', weight='2000')
+        # High weight to enforce straight line, minlen to ensure vertical separation
+        dot.edge(u, v, style='invis', weight='2000', minlen='2')
 
     # 5. Draw Edges (Dependencies)
     # Outside clusters
