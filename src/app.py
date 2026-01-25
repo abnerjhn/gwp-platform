@@ -338,41 +338,51 @@ with tabs[file_tab_idx]:
         
         # Display as grid/table
         # Custom display
-        # Group by Phase
+        # Custom display: Group by PRODUCT
+        
+        # 1. Fetch Context Data
+        acts_ref = get_table_df("activities")
+        prods_ref = get_table_df("contract_products")
+        
+        # 2. Build Mappings
+        # Prod Code -> Prod Name
+        prod_name_map = {}
+        if not prods_ref.empty:
+            for _, r in prods_ref.iterrows():
+                prod_name_map[r['code']] = f"{r['code']} {r['name']}"
+                
+        # Activity Code -> Product Name
+        act_to_prod = {}
+        if not acts_ref.empty:
+            for _, r in acts_ref.iterrows():
+                # Clean product code if pipe exists
+                p_c = r['product_code']
+                if isinstance(p_c, str) and " | " in p_c: p_c = p_c.split(" | ")[0]
+                
+                p_name = prod_name_map.get(p_c, "Sin Producto / General")
+                act_to_prod[r['activity_code']] = p_name
+        
+        # 3. Group Files
         grouped_files = {}
-        # Pre-fill structure
-        for k in PHASES_CONFIG:
-            grouped_files[k] = []
-        grouped_files["TRANS"] = []
-        grouped_files["OTHER"] = []
-
+        
         for f in files:
             # Filter
             if search_q and search_q.lower() not in f['filename'].lower() and search_q.lower() not in f['activity_code'].lower():
                 continue
                 
-            # Detect Phase form Code
-            code = f['activity_code'].upper()
-            phase_key = "OTHER"
+            # Get Group
+            a_code = f['activity_code']
+            group_name = act_to_prod.get(a_code, "Otros / Sin Asignar")
             
-            if code.startswith("1") or code.startswith("F-1"): phase_key = "1"
-            elif code.startswith("2") or code.startswith("F-2"): phase_key = "2"
-            elif code.startswith("3") or code.startswith("F-3"): phase_key = "3"
-            elif code.startswith("T") or "TRANS" in code: phase_key = "TRANS"
+            if group_name not in grouped_files:
+                grouped_files[group_name] = []
+            grouped_files[group_name].append(f)
             
-            if phase_key in grouped_files:
-                grouped_files[phase_key].append(f)
-            else:
-                grouped_files["OTHER"].append(f)
+        # 4. Render Groups (Sorted)
+        for g_name in sorted(grouped_files.keys()):
+            p_files = grouped_files[g_name]
             
-        # Render Groups (Semantic Ordering)
-        display_phases = list(PHASES_CONFIG.items()) + [("TRANS", "Transversal y Gestión"), ("OTHER", "Otros")]
-        
-        for p_key, p_name in display_phases:
-            p_files = grouped_files.get(p_key, [])
-            if not p_files: continue
-            
-            with st.expander(f"{p_name} ({len(p_files)})", expanded=True):
+            with st.expander(f"📦 {g_name} ({len(p_files)})", expanded=True):
                 for f in p_files:
                      c1, c2, c3, c4 = st.columns([0.5, 4, 3, 2])
                      c1.write("📄")
