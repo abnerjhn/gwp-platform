@@ -90,6 +90,15 @@ with tabs[0]:
                     try:
                         svg = dot.pipe(format='svg').decode('utf-8')
                         
+                        # Download Button
+                        st.download_button(
+                            label="💾 Descargar SVG (Alta Resolución)",
+                            data=svg,
+                            file_name=f"mapa_proceso_{key_suffix}.svg",
+                            mime="image/svg+xml",
+                            key=f"dl_btn_{key_suffix}"
+                        )
+                        
                         # Custom Scrollable Container
                         # We use 100% width/height for the inner SVG to respect its viewport, 
                         # but the container has overflow:auto to show scrollbars.
