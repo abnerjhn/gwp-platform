@@ -831,6 +831,9 @@ if st.session_state['role'] != 'ADMIN':
                     return pd.Series([PROJECT_START, PROJECT_START])
             
             df_all_tasks[['real_start_date', 'real_end_date']] = df_all_tasks.apply(calculate_dates, axis=1)
+            # Ensure DateTime type for .dt accessor
+            df_all_tasks['real_start_date'] = pd.to_datetime(df_all_tasks['real_start_date'])
+            df_all_tasks['real_end_date'] = pd.to_datetime(df_all_tasks['real_end_date'])
             
             # --- FILTER: MY TASKS ---
             curr_role = st.session_state['role']
@@ -851,15 +854,27 @@ if st.session_state['role'] != 'ADMIN':
             else:
                 # --- CONTROLS ---
                 today = datetime.now().date()
-                c_f1, c_f2 = st.columns([2, 5])
+                
+                # Default Week Range
+                def_start = today - timedelta(days=today.weekday())
+                def_end = def_start + timedelta(days=6)
+
+                c_f1, c_f2 = st.columns([3, 4])
                 with c_f1:
-                    ref_date = st.date_input("📅 Seleccionar Fecha", value=today)
+                    date_range = st.date_input("📅 Filtrar por Fechas (Desde - Hasta)", value=(def_start, def_end))
+                    
+                    if isinstance(date_range, tuple) or isinstance(date_range, list):
+                        if len(date_range) == 2:
+                            start_week, end_week = date_range
+                        elif len(date_range) == 1:
+                            start_week = date_range[0]
+                            end_week = start_week
+                        else:
+                            start_week, end_week = def_start, def_end
+                    else:
+                        start_week, end_week = def_start, def_end
                 
-                # Week Range
-                start_week = ref_date - timedelta(days=ref_date.weekday())
-                end_week = start_week + timedelta(days=6)
-                
-                st.caption(f"Mostrando semana: {start_week.strftime('%d/%m')} - {end_week.strftime('%d/%m')}")
+                st.caption(f"Mostrando: {start_week.strftime('%d/%m')} - {end_week.strftime('%d/%m')}")
                 st.divider()
                 
                 # --- SEGMENT 1: RETRASADAS (Delayed) ---
