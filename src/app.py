@@ -134,42 +134,64 @@ with tabs[0]:
         # Row 2: Charts (Visualizations)
         c_chart1, c_chart2 = st.columns(2)
         
+        # Prepare Data Shared
+        users_dash = get_table_df("users")
+        role_map_dash = dict(zip(users_dash['role'], users_dash['full_name'])) if not users_dash.empty else {}
+        
         with c_chart1:
-            st.subheader("Estado de Actividades")
-            # Custom Colors (Soft Pastel)
-            s_data = pd.DataFrame([
-                {"Estado": "Pendiente", "Cantidad": real_pending_count, "Color": "#cfd8dc"}, # Soft Grey
-                {"Estado": "En Progreso", "Cantidad": in_prog, "Color": "#90caf9"}, # Soft Blue
-                {"Estado": "Bloqueado", "Cantidad": blocked_count, "Color": "#ef9a9a"}, # Soft Red
-                {"Estado": "Listo", "Cantidad": done, "Color": "#a5d6a7"} # Soft Green
-            ])
+            st.subheader("Distribución y Responsables")
             
-            c_status = alt.Chart(s_data).mark_bar().encode(
-                x=alt.X('Estado', sort=None),
-                y='Cantidad',
-                color=alt.Color('Color', scale=None),
-                tooltip=['Estado', 'Cantidad']
+            # Prepare Data for Stacked Chart
+            chart_df = d_df.copy()
+            chart_df['Responsable'] = chart_df['primary_role'].map(role_map_dash).fillna(chart_df['primary_role'])
+            status_labels = {
+                'PENDING': 'Pendiente', 'IN_PROGRESS': 'En Progreso', 
+                'BLOCKED': 'Bloqueado', 'DONE': 'Listo'
+            }
+            chart_df['Estado'] = chart_df['status'].map(status_labels).fillna(chart_df['status'])
+            
+            c_stacked = alt.Chart(chart_df).mark_bar().encode(
+                x=alt.X('Estado', sort=['Pendiente', 'En Progreso', 'Bloqueado', 'Listo'], title="Estado"),
+                y=alt.Y('count()', title="Actividades"),
+                color=alt.Color('Responsable', scale=alt.Scale(scheme='set2'), title="Responsable"),
+                tooltip=['Estado', 'Responsable', 'count()']
             )
-            st.altair_chart(c_status, use_container_width=True)
+            st.altair_chart(c_stacked, use_container_width=True)
             
         with c_chart2:
-            st.subheader("Carga por Responsable")
-            # Map Code -> Name
-            d_users = get_table_df("users")
-            role_map = dict(zip(d_users['role'], d_users['full_name'])) if not d_users.empty else {}
+            st.subheader("Avance por Producto (%)")
             
-            # Count
-            r_counts = d_df['primary_role'].value_counts().reset_index()
-            r_counts.columns = ['Rol', 'Cantidad']
-            r_counts['Nombre'] = r_counts['Rol'].map(role_map).fillna(r_counts['Rol'])
+            # 1. Get Products
+            prods_ref = get_table_df("contract_products")
+            prod_map = {}
+            if not prods_ref.empty:
+                for _, r in prods_ref.iterrows():
+                    prod_map[r['code']] = f"{r['code']} {r['name']}" # Use code+name for clarity
             
-            c_role = alt.Chart(r_counts).mark_bar().encode(
-                x=alt.X('Nombre', sort='-y', title="Responsable"),
-                y='Cantidad',
-                color=alt.Color('Nombre', legend=None, scale=alt.Scale(scheme='set2')),
-                tooltip=['Nombre', 'Cantidad']
+            # 2. Helper
+            def get_prod_label(code):
+                if not isinstance(code, str): return "General"
+                c = code.split(' | ')[0]
+                return prod_map.get(c, c)
+            
+            d_df['prod_label'] = d_df['product_code'].apply(get_prod_label)
+            
+            # 3. Calculate %
+            d_df['is_done'] = d_df['status'] == 'DONE'
+            prog_df = d_df.groupby('prod_label').agg(
+                Total=('id', 'count'),
+                Done=('is_done', 'sum')
+            ).reset_index()
+            
+            prog_df['Porcentaje'] = (prog_df['Done'] / prog_df['Total'] * 100).round(1)
+            
+            c_prog = alt.Chart(prog_df).mark_bar().encode(
+                x=alt.X('Porcentaje', scale=alt.Scale(domain=[0, 100])),
+                y=alt.Y('prod_label', sort='-x', title="Producto"),
+                color=alt.Color('Porcentaje', legend=None, scale=alt.Scale(scheme='greens')),
+                tooltip=['prod_label', 'Porcentaje', 'Total', 'Done']
             )
-            st.altair_chart(c_role, use_container_width=True)
+            st.altair_chart(c_prog, use_container_width=True)
             
         st.divider()
         
