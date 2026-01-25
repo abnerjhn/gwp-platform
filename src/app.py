@@ -81,7 +81,7 @@ with tabs[0]:
         # Create Tabs for each Phase + Full View + Critical Path
         phase_tabs_names = [p['name'] for p in PHASES_CONFIG.values()]
         phase_tabs_names.append("🔭 VISTA COMPLETA")
-        phase_tabs_names.append("🔗 RUTA CRÍTICA")
+        phase_tabs_names.append("🔗 PROCESO ESTÁTICO")
         
         # Create Streamlit Tabs
         subtabs = st.tabs(phase_tabs_names)
@@ -120,7 +120,7 @@ with tabs[0]:
 
         # 3. Critical Path / Connected View
         with subtabs[-1]:
-            st.markdown("### 🔗 Flujo de Dependencias (Solo Conectadas)")
+            st.markdown("### 🔗 Proceso Estático (Flujo Lógico)")
             # Filter: Nodes that have dependencies OR are dependencies of others
             # 1. Get List of all dependency codes
             all_deps = map_df['dependency_code'].unique().tolist()
