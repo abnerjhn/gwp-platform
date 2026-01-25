@@ -279,8 +279,7 @@ with tabs[0]:
                     # Apply previous swap fix: Vertical->LR, Horizontal->TB
                     rank_dir = "LR" if "Vertical" in orientation else "TB"
                 with c2:
-                    st.write("") # Spacer (Sorting option removed, always by Date)
-                    st.caption("✅ Orden: Semanal")
+                    selected_statuses = st.multiselect("Filtrar Estado", ["PENDING", "IN_PROGRESS", "DONE"], default=["PENDING", "IN_PROGRESS", "DONE"])
                 with c3:
                     st.write("") # Spacer
                     st.write("")
@@ -307,9 +306,15 @@ with tabs[0]:
                         if p_cfg['name'] == p_name:
                             allowed_weeks.extend(range(p_cfg['start'], p_cfg['end'] + 2)) # Safety margin
                 
-                # Filter
+                # Filter Week
                 full_view_df['week_start'] = full_view_df['week_start'].fillna(0).astype(int)
                 full_view_df = full_view_df[full_view_df['week_start'].isin(allowed_weeks)]
+                
+                # Filter Status
+                if selected_statuses:
+                    full_view_df = full_view_df[full_view_df['status'].isin(selected_statuses)]
+                else:
+                    full_view_df = pd.DataFrame() # No status selected = empty
 
             # 2. Filter Critical Path (Only Connected)
             if only_connected and not full_view_df.empty:
