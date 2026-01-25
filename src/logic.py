@@ -65,12 +65,12 @@ def generate_graphviz_dot(df):
     
     # 1. Init Graph
     dot = graphviz.Digraph(comment='Plan Integrado')
-    dot.attr(rankdir='TB') # Top to Bottom (Vertically stacked phases)
-    dot.attr(compound='true') # Allow edges between clusters
-    dot.attr(splines='ortho') # Orthogonal lines looks cleaner
+    dot.attr(compound='true')
+    dot.attr(rankdir='TB') 
+    dot.attr(splines='polyline') # Polyline is more stable for complex hierarchies
     dot.attr(nodesep='0.5')
     dot.attr(ranksep='0.8')
-    dot.attr(newrank='true') # Helps align clusters properly
+    dot.attr(newrank='true') # Critical for aligning nodes across clusters
     
     # 2. Phases Logic
     phases = {
@@ -93,14 +93,28 @@ def generate_graphviz_dot(df):
 
     # 3. Draw Phases (Clusters) & Nodes
     # We iterate phases in order
-    for p_id, p_info in phases.items():
+    sorted_phases = sorted(phases.keys())
+    
+    for p_id in sorted_phases:
         rows = nodes_by_phase[p_id]
+        # We draw the cluster even if empty (to maintain the spine) or skip? 
+        # If we skip, the spine breaks. Better to check if we have data or handle spine properly.
+        # But user data might be sparse. Let's only list phases that have data to avoid empty boxes
+        # UNLESS we want empty boxes for structure. Let's stick to phases with nodes for now
+        # and rely on the spine connecting only existing phases.
         if not rows: continue
+        
+        p_info = phases[p_id]
         
         with dot.subgraph(name=f'cluster_{p_id}') as c:
             c.attr(label=p_info['name'])
             c.attr(style='filled', color='#f8f9fa')
             c.attr(fontsize='14', fontname='Helvetica-Bold')
+            
+            # --- INVISIBLE SPINE ANCHOR ---
+            # This node forces alignment
+            anchor_name = f'anchor_{p_id}'
+            c.node(anchor_name, label='', style='invis', shape='point', width='0', group='spine')
             
             for row in rows:
                 # -- STYLE LOGIC --
@@ -141,32 +155,20 @@ def generate_graphviz_dot(df):
                 
                 c.node(row['activity_code'], label=label, shape=shape, fillcolor=fill, color=color, style=style, fontname='Helvetica', fontsize='10', tooltip=tooltip)
 
-    # 4. Draw Edges (Dependencies)
+    # 4. Connect the Invisible Spine (Force Verticality)
+    active_phases = sorted([p for p in phases.keys() if nodes_by_phase[p]])
+    for i in range(len(active_phases) - 1):
+        u = f'anchor_{active_phases[i]}'
+        v = f'anchor_{active_phases[i+1]}'
+        # High weight to enforce straight line
+        dot.edge(u, v, style='invis', weight='2000')
+
+    # 5. Draw Edges (Dependencies)
     # Outside clusters
     for _, row in df.iterrows():
         dep = row.get('dependency_code')
         if dep and str(dep) != 'nan' and dep != '-' and dep in df['activity_code'].values:
-            dot.edge(dep, row['activity_code'], color='#666666')
+            # Use constraint=true (default) but weight=1 so it yields to the spine
+            dot.edge(dep, row['activity_code'], color='#666666', weight='1')
             
-    # 5. Force Vertical Stacking of Phases (Invisible Edges)
-    # Direct Node-to-Node linking: Last Node of P(i) -> First Node of P(i+1)
-    phase_ids = sorted([p for p in nodes_by_phase.keys() if nodes_by_phase[p]])
-    
-    for i in range(len(phase_ids) - 1):
-        p_curr = phase_ids[i]
-        p_next = phase_ids[i+1]
-        
-        # Get nodes
-        nodes_curr = nodes_by_phase[p_curr]
-        nodes_next = nodes_by_phase[p_next]
-        
-        if nodes_curr and nodes_next:
-            # Last node of current phase
-            n_upper = nodes_curr[-1]['activity_code']
-            # First node of next phase
-            n_lower = nodes_next[0]['activity_code']
-            
-            # Simple, strong invisible edge downwards
-            dot.edge(n_upper, n_lower, style='invis', weight='100')
-
     return dot
