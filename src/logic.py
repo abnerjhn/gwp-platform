@@ -1,6 +1,4 @@
-import pandas as pd
-import graphviz
-from db import get_connection
+
 
 def check_is_blocked(activity_row, all_activities_df):
     """
