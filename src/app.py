@@ -262,12 +262,18 @@ with tabs[0]:
 
         # 2. Render Full View (Last Tab)
 
+        # 2. Render Full View (Last Tab)
         with subtabs[-2]: # Now second to last
             st.markdown("### Diagrama Completo")
             
             # Controls Bar
             with st.container():
-                c1, c2, c3 = st.columns([4, 3, 3])
+                # Row 1: Phase Filter
+                all_phase_names = [p['name'] for p in PHASES_CONFIG.values()]
+                selected_phases = st.multiselect("Filtrar por Fases", all_phase_names, default=all_phase_names)
+
+                # Row 2: Display Options
+                c1, c2, c3, c4 = st.columns([3, 3, 2, 2])
                 with c1:
                     orientation = st.radio("Orientación", ["Vertical (TB)", "Horizontal (LR)"], index=0, horizontal=True)
                     # Apply previous swap fix: Vertical->LR, Horizontal->TB
@@ -275,18 +281,62 @@ with tabs[0]:
                 with c2:
                     sort_opt = st.selectbox("Orden Nodos", ["Original", "Por ID", "Por Fecha"])
                 with c3:
-                    st.write("") # Spacer for alignment
+                    st.write("") # Spacer
                     st.write("")
                     group_phases = st.checkbox("Agrupar Fases", value=True)
+                with c4:
+                    st.write("")
+                    st.write("")
+                    only_connected = st.checkbox("Solo Conexiones", value=False)
             
             st.divider()
             
-            # Apply Sorting
+            # --- DATA PROCESSING ---
             full_view_df = map_df.copy()
-            if sort_opt == "Por ID":
-                full_view_df = full_view_df.sort_values('activity_code')
-            elif sort_opt == "Por Fecha":
-                full_view_df = full_view_df.sort_values(['week_start', 'activity_code'])
+
+            # 1. Filter by Phases
+            if not selected_phases:
+                st.warning("⚠️ Selecciona al menos una fase para visualizar.")
+                full_view_df = pd.DataFrame()
+            else:
+                # Build list of allowed weeks based on selected phases
+                allowed_weeks = []
+                for p_name in selected_phases:
+                    for p_cfg in PHASES_CONFIG.values():
+                        if p_cfg['name'] == p_name:
+                            allowed_weeks.extend(range(p_cfg['start'], p_cfg['end'] + 2)) # Safety margin
+                
+                # Filter
+                full_view_df['week_start'] = full_view_df['week_start'].fillna(0).astype(int)
+                full_view_df = full_view_df[full_view_df['week_start'].isin(allowed_weeks)]
+
+            # 2. Filter Critical Path (Only Connected)
+            if only_connected and not full_view_df.empty:
+                # Strict Referential Integrity Filter
+                def normalize_dep(val):
+                    s = str(val).strip()
+                    if pd.isna(val) or s in ['-', '?', 'nan', 'None', '', '0']: return None
+                    return s
+                
+                analysis_df = full_view_df.copy()
+                analysis_df['clean_dep'] = analysis_df['dependency_code'].apply(normalize_dep)
+                
+                # Valid codes are only those CURRENTLY in the view (after phase filter)
+                valid_codes = set(analysis_df['activity_code'].astype(str).unique())
+                analysis_df['valid_dep'] = analysis_df['clean_dep'].apply(lambda x: x if x in valid_codes else None)
+                
+                is_valid_child = analysis_df['valid_dep'].notna()
+                valid_parents = set(analysis_df['valid_dep'].dropna().unique())
+                is_valid_parent = analysis_df['activity_code'].astype(str).isin(valid_parents)
+                
+                full_view_df = analysis_df[is_valid_child | is_valid_parent].copy()
+
+            # 3. Apply Sorting
+            if not full_view_df.empty:
+                if sort_opt == "Por ID":
+                    full_view_df = full_view_df.sort_values('activity_code')
+                elif sort_opt == "Por Fecha":
+                    full_view_df = full_view_df.sort_values(['week_start', 'activity_code'])
             
             render_tab_content(full_view_df, "full", is_full=True, group_by_phases=group_phases, rankdir=rank_dir)
 
