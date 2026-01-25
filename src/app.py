@@ -330,8 +330,7 @@ with tabs[0]:
     else:
         st.info("No hay datos de actividades cargados en el sistema.")
             
-    else:
-        st.warning("No hay datos para generar el mapa.")
+
 
 # --- VIEW: FILE MANAGER ---
 # Common for all
