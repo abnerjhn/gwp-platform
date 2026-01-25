@@ -90,27 +90,13 @@ with tabs[0]:
                     try:
                         svg = dot.pipe(format='svg').decode('utf-8')
                         
-                        # Download Button
-                        st.download_button(
-                            label="💾 Descargar SVG (Alta Resolución)",
-                            data=svg,
-                            file_name=f"mapa_proceso_{key_suffix}.svg",
-                            mime="image/svg+xml",
-                            key=f"dl_btn_{key_suffix}"
-                        )
-                        
-                        # Custom Scrollable Container
-                        # We use 100% width/height for the inner SVG to respect its viewport, 
-                        # but the container has overflow:auto to show scrollbars.
-                        # Custom Interactive Container using svg-pan-zoom
-                        # UNIQUE ID IS CRITICAL: Streamlit might render multiple tabs, duplications of id="container" breaks JS.
+                        # Custom Scrollable Container with Embedded Download
                         container_id = f"graph_container_{key_suffix}"
                         
                         html_code = f"""
                         <!DOCTYPE html>
                         <html>
                         <head>
-                            <!-- Load library -->
                             <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
                             <style>
                                 body, html {{ margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; }}
@@ -152,6 +138,7 @@ with tabs[0]:
                                 }}
                                 .btn:hover {{ background: #f0f0f0; border-color: #999; }}
                                 .reset-btn {{ font-size: 12px; height: auto; padding: 4px; }}
+                                .download {{ font-size: 16px; }}
                             </style>
                         </head>
                         <body>
@@ -160,6 +147,7 @@ with tabs[0]:
                                     <div class="btn zoom-in" title="Zoom In">+</div>
                                     <div class="btn zoom-out" title="Zoom Out">-</div>
                                     <div class="btn reset-btn reset" title="Reset">⟲</div>
+                                    <div class="btn download" title="Descargar SVG">💾</div>
                                 </div>
                                 {svg}
                             </div>
@@ -169,62 +157,67 @@ with tabs[0]:
                                     var svgElement = container.querySelector('svg');
                                     var panZoom = null;
                                     
+                                    function triggerDownload() {{
+                                        // Get SVG content
+                                        // We need the raw XML
+                                        var serializer = new XMLSerializer();
+                                        var source = serializer.serializeToString(svgElement);
+                                        
+                                        // Add name spaces
+                                        if(!source.match(/^<svg[^>]+xmlns="http\\:\\/\\/www\\.w3\\.org\\/2000\\/svg"/)){{
+                                            source = source.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
+                                        }}
+                                        if(!source.match(/^<svg[^>]+"http\\:\\/\\/www\\.w3\\.org\\/1999\\/xlink"/)){{
+                                            source = source.replace(/^<svg/, '<svg xmlns:xlink="http://www.w3.org/1999/xlink"');
+                                        }}
+                                        
+                                        // Create file
+                                        var blob = new Blob([source], {{type: "image/svg+xml;charset=utf-8"}});
+                                        var url = URL.createObjectURL(blob);
+                                        
+                                        // Download link
+                                        var downloadLink = document.createElement("a");
+                                        downloadLink.href = url;
+                                        downloadLink.download = "mapa_proceso.svg";
+                                        document.body.appendChild(downloadLink);
+                                        downloadLink.click();
+                                        document.body.removeChild(downloadLink);
+                                    }}
+
                                     function init() {{
-                                        // Avoid double init
                                         if (panZoom) return;
-                                        // Avoid init on hidden element (causes Matrix error)
                                         if (container.clientWidth === 0 || container.clientHeight === 0) return;
                                         
-                                        // Force full size
                                         svgElement.setAttribute('width', '100%');
                                         svgElement.setAttribute('height', '100%');
                                         
                                         try {{
                                             panZoom = svgPanZoom(svgElement, {{
-                                                zoomEnabled: true,
-                                                controlIconsEnabled: false,
-                                                fit: true,
-                                                center: true,
-                                                minZoom: 0.1,
-                                                maxZoom: 10,
-                                                dblClickZoomEnabled: false
+                                                zoomEnabled: true, controlIconsEnabled: false,
+                                                fit: true, center: true,
+                                                minZoom: 0.1, maxZoom: 10, dblClickZoomEnabled: false
                                             }});
                                             
                                             // Bind Controls
                                             container.querySelector('.zoom-in').addEventListener('click', function() {{ panZoom.zoomIn(); }});
                                             container.querySelector('.zoom-out').addEventListener('click', function() {{ panZoom.zoomOut(); }});
-                                            container.querySelector('.reset').addEventListener('click', function() {{ 
-                                                panZoom.resetZoom(); 
-                                                panZoom.center(); 
-                                            }});
+                                            container.querySelector('.reset').addEventListener('click', function() {{ panZoom.resetZoom(); panZoom.center(); }});
+                                            container.querySelector('.download').addEventListener('click', triggerDownload);
                                             
-                                            // Resize handler
                                             window.addEventListener('resize', function() {{
                                                 if(panZoom) {{ panZoom.resize(); panZoom.fit(); panZoom.center(); }}
                                             }});
-                                            
-                                        }} catch(e) {{
-                                            console.error("PanZoom Init Error:", e);
-                                        }}
+                                        }} catch(e) {{ console.error("Init Error", e); }}
                                     }}
                                     
-                                    // Use ResizeObserver to detect when tab becomes visible
                                     if (window.ResizeObserver) {{
                                         var ro = new ResizeObserver(function(entries) {{
                                             for (var i = 0; i < entries.length; i++) {{
-                                                if (entries[i].contentRect.width > 0) {{
-                                                    init();
-                                                }}
+                                                if (entries[i].contentRect.width > 0) init();
                                             }}
                                         }});
                                         ro.observe(container);
-                                    }} else {{
-                                        // Fallback for ancient browsers
-                                        setTimeout(init, 500); 
-                                        setTimeout(init, 2000);
-                                    }}
-                                    
-                                    // Try immediate init
+                                    }} else {{ setTimeout(init, 500); }}
                                     init();
                                 }})()
                             </script>
