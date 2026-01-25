@@ -172,6 +172,11 @@ with tabs[0]:
         
         # Row 3: Actionable Cards
         st.subheader("🚀 Foco de Atención")
+        
+        # Ensure map is available
+        d_users_ref = get_table_df("users")
+        role_map_ref = dict(zip(d_users_ref['role'], d_users_ref['full_name'])) if not d_users_ref.empty else {}
+
         c_a1, c_a2 = st.columns(2)
         
         with c_a1:
@@ -189,8 +194,12 @@ with tabs[0]:
                     # Check parent status
                     parent = d_df[d_df['activity_code'] == code]
                     if not parent.empty and parent.iloc[0]['status'] != 'DONE':
-                        p_name = parent.iloc[0]['task_name']
-                        st.markdown(f"**{code}** ({count} dependientes)  \n_{p_name}_")
+                        p_row = parent.iloc[0]
+                        p_name = p_row['task_name']
+                        p_resp = role_map_ref.get(p_row['primary_role'], p_row['primary_role'])
+                        p_date = p_row['dash_end'].strftime('%d/%m')
+                        
+                        st.markdown(f"**{code}** ({count} deps) | 👤 {p_resp} | 📅 {p_date}  \n_{p_name}_")
                         has_content = True
                 
                 if not has_content: st.caption("Los bloqueos actuales dependen de tareas ya finalizadas (Revision requerida).")
@@ -211,7 +220,9 @@ with tabs[0]:
                 for _, r in upcoming.iterrows():
                     delta = (r['dash_end'] - today).days
                     tag = "HOY" if delta == 0 else ("MAÑANA" if delta == 1 else f"en {delta} días")
-                    st.markdown(f"**{r['activity_code']}** ({tag}) | {r['dash_end'].strftime('%d/%m')}  \n_{r['task_name']}_")
+                    r_resp = role_map_ref.get(r['primary_role'], r['primary_role'])
+                    
+                    st.markdown(f"**{r['activity_code']}** ({tag}) | 📅 {r['dash_end'].strftime('%d/%m')} | 👤 {r_resp}  \n_{r['task_name']}_")
 
 # --- VIEW: LIVE MAP ---
 # --- VIEW: LIVE MAP ---
