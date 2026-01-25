@@ -338,45 +338,63 @@ with tabs[file_tab_idx]:
         
         # Display as grid/table
         # Custom display
+        # Group by Phase
+        grouped_files = {}
+        # Pre-fill structure
+        for k in PHASES_CONFIG:
+            grouped_files[k] = []
+        grouped_files["TRANS"] = []
+        grouped_files["OTHER"] = []
+
         for f in files:
             # Filter
             if search_q and search_q.lower() not in f['filename'].lower() and search_q.lower() not in f['activity_code'].lower():
                 continue
                 
-            with st.container():
-                c_icon, c_info, c_btn = st.columns([1, 6, 2])
-                c_icon.markdown("### 📄")
-                
-                with c_info:
-                    st.markdown(f"**{f['filename']}**")
-                    st.caption(f"Actividad: {f['activity_code']} | Subido por: {f.get('uploaded_by','?')} | {f['uploaded_at'][:10]}")
-                    
-                with c_btn:
-                    c_down, c_del = st.columns([1, 1])
-                    
-                    # Download
-                    url = get_evidence_url(f['storage_path'])
-                    if url:
-                        c_down.link_button("⬇️", url, help="Descargar")
-                    else:
-                        c_down.error("Link")
-
-                    # Delete (Permission Check)
-                    # Owner or Admin
-                    can_data_delete = (st.session_state['role'] == 'ADMIN') or (st.session_state['role'] == f.get('uploaded_by'))
-                    
-                    if can_data_delete:
-                        # Popover for confirmation
-                        with c_del.popover("🗑️", help="Eliminar archivo"):
-                            st.write("¿Estás seguro?")
-                            if st.button("Sí, eliminar", key=f"del_conf_{f['id']}"):
-                                success, msg = delete_evidence(f['storage_path'])
-                                if success:
-                                    st.success(msg)
-                                    st.rerun()
-                                else:
-                                    st.error(msg)
-                st.divider()
+            # Detect Phase form Code
+            code = f['activity_code'].upper()
+            phase_key = "OTHER"
+            
+            if code.startswith("1") or code.startswith("F-1"): phase_key = "1"
+            elif code.startswith("2") or code.startswith("F-2"): phase_key = "2"
+            elif code.startswith("3") or code.startswith("F-3"): phase_key = "3"
+            elif code.startswith("T") or "TRANS" in code: phase_key = "TRANS"
+            
+            if phase_key in grouped_files:
+                grouped_files[phase_key].append(f)
+            else:
+                grouped_files["OTHER"].append(f)
+            
+        # Render Groups (Semantic Ordering)
+        display_phases = list(PHASES_CONFIG.items()) + [("TRANS", "Transversal y Gestión"), ("OTHER", "Otros")]
+        
+        for p_key, p_name in display_phases:
+            p_files = grouped_files.get(p_key, [])
+            if not p_files: continue
+            
+            with st.expander(f"{p_name} ({len(p_files)})", expanded=True):
+                for f in p_files:
+                     c1, c2, c3, c4 = st.columns([0.5, 4, 3, 2])
+                     c1.write("📄")
+                     with c2:
+                         st.markdown(f"**{f['filename']}**")
+                         st.caption(f"🆔 {f['activity_code']}")
+                     with c3:
+                         st.caption(f"👤 {f.get('uploaded_by','?')} | 📅 {f['uploaded_at'][:10]}")
+                     
+                     with c4:
+                         c_d, c_del = st.columns([1, 1])
+                         url = get_evidence_url(f['storage_path'])
+                         if url: 
+                             c_d.markdown(f"[⬇️]({url})")
+                         
+                         can_del = (st.session_state['role'] == 'ADMIN') or (st.session_state['role'] == f.get('uploaded_by'))
+                         if can_del:
+                             with c_del.popover("🗑️"):
+                                 if st.button("Conf.", key=f"del_f_{f['id']}"):
+                                     delete_evidence(f['storage_path'])
+                                     st.rerun()
+                     st.divider()
 
 # --- VIEW: CONFIGURATION (ADMIN) ---
 if st.session_state['role'] == 'ADMIN':
