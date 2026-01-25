@@ -121,22 +121,35 @@ with tabs[0]:
         # 3. Critical Path / Connected View
         with subtabs[-1]:
             st.markdown("### 🔗 Ruta Crítica (Solo Conexiones)")
-            # Filter: Nodes that have dependencies OR are dependencies of others
-            # 1. Get List of all dependency codes
-            all_deps = map_df['dependency_code'].unique().tolist()
-            # Clean list
-            all_deps = [d for d in all_deps if d and d != '-' and d != 'nan']
             
-            # Condition 1: Has a dependency
-            cond1 = map_df['dependency_code'].notna() & (map_df['dependency_code'] != '-') & (map_df['dependency_code'] != '')
-            # Condition 2: Is a dependency (code is in all_deps)
-            cond2 = map_df['activity_code'].isin(all_deps)
+            # STRICT FILTERING Logic
+            # 1. Clean dependencies to avoid false positives with '-', 'nan', etc.
+            def normalize_dep(val):
+                if pd.isna(val): return None
+                s = str(val).strip()
+                if s in ['-', '?', 'nan', 'None', '', '0']: return None
+                return s
             
-            connected_subset = map_df[cond1 | cond2]
+            # Work on a copy to filter
+            analysis_df = map_df.copy()
+            analysis_df['clean_dep'] = analysis_df['dependency_code'].apply(normalize_dep)
             
-            if not connected_subset.empty:
+            # 2. Identify Parents (nodes that are pointed to)
+            parent_codes = set(analysis_df['clean_dep'].dropna().unique())
+            
+            # 3. Apply Conditions
+            # cond1: Logic "I have a parent" (I am a child)
+            has_parent = analysis_df['clean_dep'].notna()
+            
+            # cond2: Logic "I am a parent" (Someone points to me)
+            is_parent = analysis_df['activity_code'].isin(parent_codes)
+            
+            # Keep nodes that are part of a relationship (either side)
+            connected_pool = analysis_df[has_parent | is_parent].copy()
+            
+            if not connected_pool.empty:
                 # Pass group_by_phases=False to remove cluster boxes
-                render_tab_content(connected_subset, "critical", is_full=True, group_by_phases=False)
+                render_tab_content(connected_subset=connected_pool, key_suffix="critical", is_full=True, group_by_phases=False)
             else:
                 st.info("No hay dependencias registradas para mostrar un flujo conectado.")
             
