@@ -732,16 +732,20 @@ if st.session_state['role'] == 'ADMIN':
         st.info("CMS Integrado: Las opciones de Productos y Usuarios vienen de la DB.")
         
         # --- HELP: Type Codes ---
-        with st.expander("❓ Guía de Códigos de TIPO", expanded=False):
+        with st.expander("❓ Guía de Códigos de TIPO (Auto-Calculados)", expanded=False):
             st.markdown("""
-| Código | Nombre | Descripción |
-|--------|--------|-------------|
-| **INT** | Integrada | Actividad que involucra a más de una consultoría/rol o que produce un resultado que alimenta directamente a varias (ej: talleres, validación con gobierno, QA). |
-| **IND** | Individual | Actividad ejecutada principalmente por una consultoría (un responsable claro), aunque pueda usar insumos del resto. |
-| **DEP** | Dependiente | Marca que la actividad no puede comenzar o cerrarse hasta que ocurra algo previo. Se combina con INT o IND. |
-| **INT+DEP** | Integrada y Dependiente | Requiere integración y además necesita un prerequisito. Ej: talleres de co-creación que dependen de convocatoria/baseline. |
-| **IND+DEP** | Individual y Dependiente | La hace un responsable único, pero está "bloqueada" hasta que exista un insumo previo. Ej: redactar manual v0.9 depende de mecanismos aprobados. |
-| **IND-P** | Individual Pura | Actividad individual que no depende de nada externo (puede arrancar desde el día 1). Ej: benchmarking internacional. |
+**Los códigos de TIPO se calculan automáticamente al guardar, basándose en:**
+- **Co-Responsables**: Si el campo tiene valores → `INT` (Integrada), sino → `IND` (Individual)
+- **Dependencias**: Si tiene dependencia válida → se agrega `+DEP`
+
+| Código | Cálculo Automático | Significado |
+|--------|-------------------|-------------|
+| **INT** | Tiene Co-Responsables, SIN dependencia | Actividad integrada (múltiples roles involucrados). |
+| **INT+DEP** | Tiene Co-Responsables Y dependencia | Integrada que requiere un prerequisito. |
+| **IND-P** | Sin Co-Responsables, SIN dependencia | Individual Pura, puede iniciar desde el día 1. |
+| **IND+DEP** | Sin Co-Responsables, CON dependencia | Individual bloqueada hasta que exista un insumo previo. |
+
+💡 *El campo TIPO se sobrescribe al guardar. Si necesitas un valor especial, edita manualmente después de guardar.*
 """)
         
         # Fresh Fetch - Sync Files First
@@ -807,6 +811,38 @@ if st.session_state['role'] == 'ADMIN':
                     return val
                 
                 save_df['product_code'] = save_df['product_code'].apply(unpack_product)
+                
+                # --- AUTO-CALCULATE TYPE TAG ---
+                def compute_type_tag(row):
+                    has_dep = False
+                    dep_val = str(row.get('dependency_code', '')).strip()
+                    if dep_val and dep_val not in ['nan', 'None', '-', '', '0']:
+                        has_dep = True
+                    
+                    has_co = False
+                    co_val = str(row.get('co_responsibles', '')).strip()
+                    if co_val and co_val not in ['nan', 'None', '-', '']:
+                        has_co = True
+                    
+                    # Logic:
+                    # INT if has co-responsibles, else IND
+                    # +DEP if has dependency
+                    # IND-P if IND and no dependency
+                    
+                    if has_co:
+                        base = "INT"
+                    else:
+                        base = "IND"
+                    
+                    if has_dep:
+                        return f"{base}+DEP"
+                    else:
+                        if base == "IND":
+                            return "IND-P"
+                        else:
+                            return base # INT without dep
+                
+                save_df['type_tag'] = save_df.apply(compute_type_tag, axis=1)
                 
                 # Prepare payload
                 # We only want to save columns that exist in DB + ID
