@@ -70,6 +70,7 @@ def generate_graphviz_dot(df):
     dot.attr(splines='ortho') # Orthogonal lines looks cleaner
     dot.attr(nodesep='0.5')
     dot.attr(ranksep='0.8')
+    dot.attr(newrank='true') # Helps align clusters properly
     
     # 2. Phases Logic
     phases = {
@@ -100,7 +101,8 @@ def generate_graphviz_dot(df):
             c.attr(label=p_info['name'])
             c.attr(style='filled', color='#f8f9fa')
             c.attr(fontsize='14', fontname='Helvetica-Bold')
-            c.attr(labelloc='t') # Label at top
+            c.attr(fontsize='14', fontname='Helvetica-Bold')
+            # c.attr(labelloc='t') # Removed to avoid potential conflicts with vertical packing
             
             for row in rows:
                 # -- STYLE LOGIC --
@@ -148,4 +150,24 @@ def generate_graphviz_dot(df):
         if dep and str(dep) != 'nan' and dep != '-' and dep in df['activity_code'].values:
             dot.edge(dep, row['activity_code'], color='#666666')
             
+    # 5. Force Vertical Stacking of Phases (Invisible Edges)
+    # Link the last node of Phase N to the first node of Phase N+1
+    # This guarantees P0 is above P1, P1 above P2, etc.
+    phase_ids = sorted([p for p in nodes_by_phase.keys() if nodes_by_phase[p]])
+    
+    for i in range(len(phase_ids) - 1):
+        p_curr = phase_ids[i]
+        p_next = phase_ids[i+1]
+        
+        # Get a node from each
+        nodes_curr = nodes_by_phase[p_curr]
+        nodes_next = nodes_by_phase[p_next]
+        
+        if nodes_curr and nodes_next:
+            # We pick the last one of current to first of next to maintain flow
+            n_upper = nodes_curr[-1]['activity_code']
+            n_lower = nodes_next[0]['activity_code']
+            
+            dot.edge(n_upper, n_lower, style='invis', weight='50')
+
     return dot
