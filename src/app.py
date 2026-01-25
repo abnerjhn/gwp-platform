@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta, date
 from db import init_connection, get_table_df, upsert_data, get_project_meta, update_project_meta, update_activity_status_flow, seed_master_defaults, seed_activities_from_csv, upload_evidence, get_evidence_by_activity, get_evidence_url, get_all_evidence, delete_evidence
-from logic import check_is_blocked, check_can_complete, generate_graphviz_dot
+from logic import check_dependencies_blocking, update_activity_status, get_dashboard_metrics, move_mechanism_stage, generate_graphviz_dot, PHASES_CONFIG
 from components import render_kanban_card, render_mechanism_card, render_gantt_chart
 
 st.set_page_config(page_title="GWP Platform", layout="wide", page_icon="🌐")
@@ -70,42 +70,53 @@ else:
 
 # --- VIEW: LIVE MAP ---
 # --- VIEW: LIVE MAP ---
-import streamlit.components.v1 as components
-
 with tabs[0]:
     st.header("🗺️ Tablero de Control Visual")
-    st.caption("Estado vivo del proyecto - Generado con Graphviz")
+    st.caption("Organización por Fases del Proyecto")
     
-    # Custom Legend
-    with st.expander("ℹ️ Leyenda de Simbología", expanded=False):
-        c1,c2,c3,c4 = st.columns(4)
-        c1.markdown("""
-        **Estado:**
-        - 🟢 **Listo**: Completado
-        - 🟡 **En Progreso**: Activo
-        - 🔴 **Bloqueado**: Requiere atención
-        """)
-        c2.markdown("""
-        **Roles (Formas):**
-        - ▭ **Finanzas**: Rectángulo
-        - ☖ **Legal**: Nota
-        - ⬯ **Coordinación**: Círculo
-        """)
-    
-    # Generate
+    # Generate DF
     map_df = get_table_df("activities")
+    
     if not map_df.empty:
-        try:
-            dot = generate_graphviz_dot(map_df)
-            if dot:
-                # Fallback to Server-Side Rendering (Stable) due to CORS issues with Client-Side libraries
-                st.graphviz_chart(dot, use_container_width=True)
-                st.caption("Nota: Vista estática por compatibilidad y seguridad en la nube.")
-            else:
-                st.info("Sin datos para graficar.")
-        except Exception as e:
-            st.error(f"Error generando gráfico: {e}")
-            st.caption("Nota: Para ver este gráfico, el servidor necesita instalar 'graphviz' (packages.txt).")
+        # Create Tabs for each Phase + Full View
+        phase_tabs_names = [p['name'] for p in PHASES_CONFIG.values()]
+        phase_tabs_names.append("🔭 VISTA COMPLETA")
+        
+        # Create Streamlit Tabs
+        subtabs = st.tabs(phase_tabs_names)
+        
+        # Helper to render
+        def render_tab_content(current_df, key_suffix, is_full=False):
+            if current_df.empty:
+                st.warning("No hay actividades registradas para esta fase.")
+                return
+
+            try:
+                dot = generate_graphviz_dot(current_df)
+                if dot:
+                    st.graphviz_chart(dot, use_container_width=True)
+                    if not is_full:
+                        st.caption("✅ Vista enfocada en fase específica.")
+                else:
+                    st.info("No se pudo generar el gráfico.")
+            except Exception as e:
+                st.error(f"Error generando gráfico: {e}")
+
+        # 1. Render Individual Phases
+        for i, (p_id, p_info) in enumerate(PHASES_CONFIG.items()):
+            with subtabs[i]:
+                # Filter Logic: Week based
+                # Ensure week_start is numeric
+                condition = map_df['week_start'].fillna(0).astype(int).between(p_info['start'], p_info['end'])
+                subset = map_df[condition]
+                
+                render_tab_content(subset, f"p{p_id}")
+
+        # 2. Render Full View (Last Tab)
+        with subtabs[-1]:
+            st.markdown("### Diagrama Completo")
+            render_tab_content(map_df, "full", is_full=True)
+            
     else:
         st.warning("No hay datos para generar el mapa.")
 

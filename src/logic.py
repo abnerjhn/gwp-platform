@@ -57,6 +57,15 @@ def get_grouped_columns(df):
     # ... any specific logic needed for Kanban
     return df
 
+# Global Phase Definition
+PHASES_CONFIG = {
+    0: {"name": "FASE 0: ARRANQUE",     "start": 0,  "end": 1},
+    1: {"name": "FASE 1: BASELINE",     "start": 2,  "end": 5},
+    2: {"name": "FASE 2: FÁBRICA",      "start": 6,  "end": 11},
+    3: {"name": "FASE 3: CARPINTERÍA",  "start": 12, "end": 20},
+    4: {"name": "FASE 4: CIERRE",       "start": 21, "end": 999}
+}
+
 def generate_graphviz_dot(df):
     """
     Generates Graphviz Graph object for the Live Process Map.
@@ -67,19 +76,13 @@ def generate_graphviz_dot(df):
     dot = graphviz.Digraph(comment='Plan Integrado')
     dot.attr(compound='true')
     dot.attr(rankdir='TB') 
-    dot.attr(splines='polyline') # Polyline is more stable for complex hierarchies
+    dot.attr(splines='polyline') 
     dot.attr(nodesep='0.5')
     dot.attr(ranksep='0.8')
-    dot.attr(newrank='true') # Critical for aligning nodes across clusters
+    dot.attr(newrank='true') 
     
-    # 2. Phases Logic
-    phases = {
-        0: {"name": "FASE 0: ARRANQUE",     "start": 0,  "end": 1},
-        1: {"name": "FASE 1: BASELINE",     "start": 2,  "end": 5},
-        2: {"name": "FASE 2: FÁBRICA",      "start": 6,  "end": 11},
-        3: {"name": "FASE 3: CARPINTERÍA",  "start": 12, "end": 20},
-        4: {"name": "FASE 4: CIERRE",       "start": 21, "end": 999}
-    }
+    # Use global
+    phases = PHASES_CONFIG
     
     # Collect nodes per phase to group them
     nodes_by_phase = {pid: [] for pid in phases}
