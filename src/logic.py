@@ -121,7 +121,11 @@ def generate_graphviz_dot(df, group_by_phases=True, rankdir='TB'):
         
         # Label & Tooltip
         full_name = row['task_name']
-        tooltip = f"{full_name}\nResponsable: {role}\nEstado: {status}"
+        resp_name = row.get('responsible_name', role)
+        if pd.isna(resp_name) or resp_name == '': resp_name = role
+        
+        wk = row.get('week_start', '?')
+        tooltip = f"{full_name}\nResponsable: {resp_name}\nSemana: {wk}\nEstado: {status}"
         
         short_name = full_name[:20] + "..." if len(full_name) > 20 else full_name
         label = f"{row['activity_code']}\n{short_name}"

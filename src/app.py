@@ -334,7 +334,7 @@ with tabs[0]:
             # 3. Apply Sorting
             if not full_view_df.empty:
                 if sort_opt == "Por ID":
-                    full_view_df = full_view_df.sort_values('activity_code')
+                    full_view_df = full_view_df.sort_values('id')
                 elif sort_opt == "Por Fecha":
                     full_view_df = full_view_df.sort_values(['week_start', 'activity_code'])
             
