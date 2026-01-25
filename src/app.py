@@ -139,15 +139,23 @@ with tabs[0]:
         
         gap = progress - time_pct # +Ahead, -Behind
         
-        # Documentation Compliance
+        # Documentation Compliance (Global Coverage)
         files_ref = get_all_evidence()
         acts_with_files = set(f['activity_code'] for f in files_ref) if files_ref else set()
-        done_tasks = d_df[d_df['status'] == 'DONE']
-        if len(done_tasks) > 0:
-            done_w_file = done_tasks['activity_code'].isin(acts_with_files).sum()
-            ev_rate = int((done_w_file / len(done_tasks)) * 100)
+        
+        # Filter: Evidence Required (Not '-' or Empty)
+        req_mask = (d_df['evidence_description'].notna()) & (d_df['evidence_description'] != '-') & (d_df['evidence_description'] != '')
+        req_df = d_df[req_mask]
+        total_req = len(req_df)
+        
+        if total_req > 0:
+            # Count actual matches
+            have_files_count = req_df['activity_code'].isin(acts_with_files).sum()
+            ev_rate = int((have_files_count / total_req) * 100)
+            ev_help = f"{have_files_count} de {total_req} entregables"
         else:
-            ev_rate = 100 # Start fresh
+            ev_rate = 100
+            ev_help = "Sin requisitos"
             
         # Recent Activity
         last_up = "-"
@@ -162,7 +170,7 @@ with tabs[0]:
         h1, h2, h3, h4 = st.columns(4)
         h1.metric("Tiempo Transcurrido", f"{time_pct}%", f"Semana {int(weeks_passed)}")
         h2.metric("Desviación Plan", f"{gap}%", "Avance vs Tiempo", delta_color="normal")
-        h3.metric("Integridad Documental", f"{ev_rate}%", "Tareas Listas con Evidencia")
+        h3.metric("Cobertura Documental", f"{ev_rate}%", ev_help)
         h4.metric("Última Actividad", last_up, "Archivo Reciente")
         
         st.divider()
