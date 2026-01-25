@@ -101,8 +101,6 @@ def generate_graphviz_dot(df):
             c.attr(label=p_info['name'])
             c.attr(style='filled', color='#f8f9fa')
             c.attr(fontsize='14', fontname='Helvetica-Bold')
-            c.attr(fontsize='14', fontname='Helvetica-Bold')
-            # c.attr(labelloc='t') # Removed to avoid potential conflicts with vertical packing
             
             for row in rows:
                 # -- STYLE LOGIC --
@@ -151,23 +149,24 @@ def generate_graphviz_dot(df):
             dot.edge(dep, row['activity_code'], color='#666666')
             
     # 5. Force Vertical Stacking of Phases (Invisible Edges)
-    # Link the clusters directly using lhead/ltail
-    # This guarantees P0 is above P1, P1 above P2, etc.
+    # Direct Node-to-Node linking: Last Node of P(i) -> First Node of P(i+1)
     phase_ids = sorted([p for p in nodes_by_phase.keys() if nodes_by_phase[p]])
     
     for i in range(len(phase_ids) - 1):
         p_curr = phase_ids[i]
         p_next = phase_ids[i+1]
         
-        # Get a node from each (any node works as anchor for lhead/ltail)
+        # Get nodes
         nodes_curr = nodes_by_phase[p_curr]
         nodes_next = nodes_by_phase[p_next]
         
         if nodes_curr and nodes_next:
+            # Last node of current phase
             n_upper = nodes_curr[-1]['activity_code']
+            # First node of next phase
             n_lower = nodes_next[0]['activity_code']
             
-            # CRITICAL: lhead/ltail forces the CLUSTERs to stack, not just nodes
-            dot.edge(n_upper, n_lower, style='invis', weight='100', ltail=f'cluster_{p_curr}', lhead=f'cluster_{p_next}')
+            # Simple, strong invisible edge downwards
+            dot.edge(n_upper, n_lower, style='invis', weight='100')
 
     return dot
