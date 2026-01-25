@@ -263,7 +263,7 @@ with tabs[0]:
         # 2. Render Full View (Last Tab)
         with subtabs[-2]: # Now second to last
             st.markdown("### Diagrama Completo")
-            render_tab_content(map_df, "full", is_full=True)
+            render_tab_content(map_df, "full", is_full=True, group_by_phases=False)
 
         # 3. Critical Path / Connected View
         with subtabs[-1]:
