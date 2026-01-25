@@ -267,8 +267,9 @@ with tabs[0]:
             with col2: 
                 orientation = st.radio("Orientación", ["Vertical (TB)", "Horizontal (LR)"], label_visibility="collapsed")
                 rank_dir = "TB" if "Vertical" in orientation else "LR"
+                group_phases = st.checkbox("Agrupar por Fases", value=True)
             
-            render_tab_content(map_df, "full", is_full=True, group_by_phases=False, rankdir=rank_dir)
+            render_tab_content(map_df, "full", is_full=True, group_by_phases=group_phases, rankdir=rank_dir)
 
         # 3. Critical Path / Connected View
         with subtabs[-1]:
