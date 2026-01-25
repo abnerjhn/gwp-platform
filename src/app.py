@@ -4,6 +4,7 @@ from datetime import datetime, timedelta, date
 from db import init_connection, get_table_df, upsert_data, get_project_meta, update_project_meta, update_activity_status_flow, seed_master_defaults, seed_activities_from_csv, upload_evidence, get_evidence_by_activity, get_evidence_url, get_all_evidence, delete_evidence
 from logic import check_dependencies_blocking, check_is_blocked, check_can_complete, update_activity_status, get_dashboard_metrics, move_mechanism_stage, generate_graphviz_dot, PHASES_CONFIG
 from components import render_kanban_card, render_mechanism_card, render_gantt_chart
+import streamlit.components.v1 as components
 
 st.set_page_config(page_title="GWP Platform", layout="wide", page_icon="🌐")
 
@@ -95,9 +96,41 @@ with tabs[0]:
             try:
                 dot = generate_graphviz_dot(current_df, group_by_phases=group_by_phases)
                 if dot:
-                    st.graphviz_chart(dot, use_container_width=True)
-                    if not is_full:
-                        st.caption("✅ Vista enfocada en fase específica.")
+                    # RENDER STRATEGY: Embed SVG in scrollable HTML container
+                    # This allows scrolling large diagrams instead of shrinking them
+                    try:
+                        svg = dot.pipe(format='svg').decode('utf-8')
+                        
+                        # Custom Scrollable Container
+                        # We use 100% width/height for the inner SVG to respect its viewport, 
+                        # but the container has overflow:auto to show scrollbars.
+                        html_code = f"""
+                        <div style="
+                            width: 100%; 
+                            height: 100%; 
+                            overflow: auto; 
+                            background-color: white; 
+                            padding: 20px; 
+                            border-radius: 8px; 
+                            border: 1px solid #e0e0e0;
+                            display: flex;
+                            justify_content: center;
+                        ">
+                            {svg}
+                        </div>
+                        """
+                        
+                        # Render component with generous height
+                        components.html(html_code, height=700, scrolling=True)
+                        
+                        if not is_full:
+                             st.caption("💡 Usa las barras de desplazamiento para navegar el diagrama.")
+                             
+                    except Exception as pipe_err:
+                         # Fallback if dot binary missing or pipe fails
+                         st.warning(f"Modo interactivo limitado (Error SVG: {pipe_err}). Usando vista estática.")
+                         st.graphviz_chart(dot, use_container_width=True)
+                         
                 else:
                     st.info("No se pudo generar el gráfico.")
             except Exception as e:
