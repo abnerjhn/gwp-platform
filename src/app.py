@@ -65,15 +65,88 @@ with st.sidebar:
 # --- TABS ---
 # --- TABS ---
 if st.session_state['role'] == 'ADMIN':
-    tabs = st.tabs(["🔀 Mapa de Procesos", "📋 Actividades", "📂 Archivos", "📅 Planificación (CMS)", "⚙️ Configuración"])
+    tabs = st.tabs(["📊 Dashboard", "🔀 Mapa de Procesos", "📋 Actividades", "📂 Archivos", "📅 Planificación (CMS)", "⚙️ Configuración"])
 elif st.session_state['role'] == 'GOBIERNO':
-    tabs = st.tabs(["🔀 Mapa de Procesos", "📋 Actividades", "📂 Archivos"])
+    tabs = st.tabs(["📊 Dashboard", "🔀 Mapa de Procesos", "📋 Actividades", "📂 Archivos"])
 else:
-    tabs = st.tabs(["🔀 Mapa de Procesos", "📋 Actividades", "📋 Mis Tareas", "📂 Archivos"])
+    tabs = st.tabs(["📊 Dashboard", "🔀 Mapa de Procesos", "📋 Actividades", "📋 Mis Tareas", "📂 Archivos"])
+
+
+# --- VIEW: DASHBOARD ---
+with tabs[0]:
+    st.header("📊 Tablero de Control del Proyecto")
+    
+    # metrics
+    d_df = get_table_df("activities")
+    
+    if d_df.empty:
+        st.info("Sin datos para mostrar.")
+    else:
+        # Calcs
+        total = len(d_df)
+        done = len(d_df[d_df['status'] == 'DONE'])
+        in_prog = len(d_df[d_df['status'] == 'IN_PROGRESS'])
+        
+        # Calculate real Blocked (DB Blocked + Visual Blocked)
+        blocked_count = 0
+        real_pending_count = 0
+        
+        for _, r in d_df.iterrows():
+            s = r['status']
+            if s == 'BLOCKED':
+                blocked_count += 1
+            elif s == 'PENDING':
+                if check_is_blocked(r, d_df):
+                    blocked_count += 1
+                else:
+                    real_pending_count += 1
+            
+        progress = int((done / total) * 100) if total > 0 else 0
+        
+        # Delayed Calc
+        today = datetime.now().date()
+        def get_end_date_dash(row):
+            try:
+                we = int(row.get('week_end') or 1)
+                real_e = PROJECT_START + timedelta(weeks=we) - timedelta(days=1)
+                return real_e
+            except:
+                return PROJECT_START
+        
+        d_df['dash_end'] = d_df.apply(get_end_date_dash, axis=1)
+        d_df['dash_end'] = pd.to_datetime(d_df['dash_end']).dt.date
+        
+        delayed = len(d_df[(d_df['dash_end'] < today) & (d_df['status'] != 'DONE')])
+
+        # Row 1: Metrics
+        m1, m2, m3, m4 = st.columns(4)
+        m1.metric("Total Actividades", total)
+        m2.metric("Progreso Global", f"{progress}%", f"{in_prog} En curso")
+        m3.metric("Bloqueadas", blocked_count, delta_color="inverse")
+        m4.metric("Retrasadas", delayed, delta_color="inverse")
+        
+        st.divider()
+        
+        # Row 2: Charts
+        c_chart1, c_chart2 = st.columns(2)
+        
+        with c_chart1:
+            st.subheader("Estado de Actividades")
+            status_data = {
+                "Estado": ["Pendiente", "En Progreso", "Bloqueado", "Listo"],
+                "Cantidad": [real_pending_count, in_prog, blocked_count, done]
+            }
+            # Color map hack? default blue is fine
+            st.bar_chart(pd.DataFrame(status_data).set_index("Estado"))
+            
+        with c_chart2:
+            st.subheader("Carga por Rol")
+            role_counts = d_df['primary_role'].value_counts()
+            st.bar_chart(role_counts)
 
 # --- VIEW: LIVE MAP ---
 # --- VIEW: LIVE MAP ---
-with tabs[0]:
+with tabs[1]:
     # Generate DF
     map_df = get_table_df("activities")
     
@@ -408,7 +481,7 @@ with tabs[file_tab_idx]:
 
 # --- VIEW: CONFIGURATION (ADMIN) ---
 if st.session_state['role'] == 'ADMIN':
-    with tabs[4]:
+    with tabs[5]:
         st.header("⚙️ Gestión de Datos Maestros")
         
         c1, c2 = st.columns(2)
@@ -479,7 +552,7 @@ if st.session_state['role'] == 'ADMIN':
 
 # --- VIEW: PLANNING CMS (ADMIN) ---
 if st.session_state['role'] == 'ADMIN':
-    with tabs[3]:
+    with tabs[4]:
         st.header("📅 Editor Maestro de Cronograma")
         st.info("CMS Integrado: Las opciones de Productos y Usuarios vienen de la DB.")
         
@@ -845,7 +918,7 @@ with target_tab:
 
 # --- VIEW: MY TASKS (USER ONLY) ---
 if st.session_state['role'] not in ['ADMIN', 'GOBIERNO']:
-    with tabs[2]:
+    with tabs[3]:
         st.header("📋 Tablero de Prioridades Personales")
         
         df_all_tasks = get_table_df("activities")
