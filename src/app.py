@@ -805,3 +805,103 @@ with target_tab:
             # Combine both
             df_all = pd.concat([df_primary, df_co]).drop_duplicates(subset=['id'])
             render_content(df_all)
+
+# --- VIEW: MY TASKS (USER ONLY) ---
+if st.session_state['role'] != 'ADMIN':
+    with tabs[3]:
+        st.header("📋 Tablero de Prioridades Personales")
+        
+        df_all_tasks = get_table_df("activities")
+        users_df = get_table_df("users")
+        
+        if df_all_tasks.empty:
+            st.info("No se encontraron actividades.")
+        else:
+            # --- DATE LOGIC (Local Helper) ---
+            def calculate_dates(row):
+                try:
+                    ws = int(row.get('week_start') or 1)
+                    we = int(row.get('week_end') or 1)
+                    p_start = PROJECT_START
+                    real_s = p_start + timedelta(weeks=ws-1)
+                    real_e = p_start + timedelta(weeks=we) - timedelta(days=1)
+                    return pd.Series([real_s, real_e])
+                except:
+                    return pd.Series([PROJECT_START, PROJECT_START])
+            
+            df_all_tasks[['real_start_date', 'real_end_date']] = df_all_tasks.apply(calculate_dates, axis=1)
+            
+            # --- FILTER: MY TASKS ---
+            curr_role = st.session_state['role']
+            role_map = {r['role']: r['full_name'] for _, r in users_df.iterrows()} if not users_df.empty else {}
+            curr_name = role_map.get(curr_role, "")
+            
+            def is_mine(row):
+                if row['primary_role'] == curr_role: return True
+                co = str(row.get('co_responsibles', ''))
+                if curr_role in co: return True
+                if curr_name and curr_name in co: return True
+                return False
+            
+            df_mine = df_all_tasks[df_all_tasks.apply(is_mine, axis=1)].copy()
+            
+            if df_mine.empty:
+                st.success("🎉 ¡Estás libre! No tienes actividades asignadas.")
+            else:
+                # --- CONTROLS ---
+                today = datetime.now().date()
+                c_f1, c_f2 = st.columns([2, 5])
+                with c_f1:
+                    ref_date = st.date_input("📅 Seleccionar Fecha", value=today)
+                
+                # Week Range
+                start_week = ref_date - timedelta(days=ref_date.weekday())
+                end_week = start_week + timedelta(days=6)
+                
+                st.caption(f"Mostrando semana: {start_week.strftime('%d/%m')} - {end_week.strftime('%d/%m')}")
+                st.divider()
+                
+                # --- SEGMENT 1: RETRASADAS (Delayed) ---
+                df_mine['date_only_end'] = df_mine['real_end_date'].dt.date
+                delayed_mask = (df_mine['date_only_end'] < today) & (df_mine['status'] != 'DONE')
+                df_delayed = df_mine[delayed_mask]
+                
+                if not df_delayed.empty:
+                    st.error(f"🚨 TIENES {len(df_delayed)} ACTIVIDADES RETRASADAS")
+                    for _, row in df_delayed.iterrows():
+                        with st.container(border=True):
+                            c1, c2 = st.columns([5, 1])
+                            c1.markdown(f"**{row['activity_code']}** {row['task_name']}")
+                            c1.caption(f"Debió terminar: {row['real_end_date'].strftime('%d %b')}")
+                
+                # --- SEGMENT 2: URGENTE / BLOQUEANTE (Blocking Others) ---
+                pending_all = df_all_tasks[df_all_tasks['status'] != 'DONE']
+                blocking_codes = pending_all['dependency_code'].dropna().unique()
+                
+                blocking_mask = (df_mine['activity_code'].isin(blocking_codes)) & (df_mine['status'] != 'DONE')
+                df_urgent = df_mine[blocking_mask]
+                
+                if not df_urgent.empty:
+                    st.warning(f"🔥 {len(df_urgent)} ACTIVIDADES ESTÁN BLOQUEANDO AL EQUIPO")
+                    for _, row in df_urgent.iterrows():
+                         with st.container(border=True):
+                            st.markdown(f"**{row['activity_code']}** {row['task_name']}")
+                            blocked_kids = pending_all[pending_all['dependency_code'] == row['activity_code']]
+                            kids_str = ", ".join(blocked_kids['activity_code'].tolist())
+                            st.caption(f"Estás bloqueando a: {kids_str}")
+
+                # --- SEGMENT 3: THIS WEEK ---
+                df_mine['date_only_start'] = df_mine['real_start_date'].dt.date
+                week_mask = (df_mine['date_only_start'] <= end_week) & (df_mine['date_only_end'] >= start_week)
+                df_week = df_mine[week_mask]
+                
+                st.subheader("📆 Tu Planificación Semanal")
+                
+                if df_week.empty:
+                    st.info("Nada planificado para esta semana específica.")
+                else:
+                    for _, row in df_week.iterrows():
+                        status_icon = "✅" if row['status'] == 'DONE' else "🔄"
+                        with st.container(border=True):
+                            st.markdown(f"**{status_icon} {row['activity_code']}** - {row['task_name']}")
+                            st.caption(f"{row['real_start_date'].strftime('%d %b')} -> {row['real_end_date'].strftime('%d %b')} | Estado: {row['status']}")
