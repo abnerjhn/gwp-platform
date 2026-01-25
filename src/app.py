@@ -87,13 +87,13 @@ with tabs[0]:
         subtabs = st.tabs(phase_tabs_names)
         
         # Helper to render
-        def render_tab_content(current_df, key_suffix, is_full=False):
+        def render_tab_content(current_df, key_suffix, is_full=False, group_by_phases=True):
             if current_df.empty:
                 st.warning("No hay actividades registradas para esta fase.")
                 return
 
             try:
-                dot = generate_graphviz_dot(current_df)
+                dot = generate_graphviz_dot(current_df, group_by_phases=group_by_phases)
                 if dot:
                     st.graphviz_chart(dot, use_container_width=True)
                     if not is_full:
@@ -135,7 +135,8 @@ with tabs[0]:
             connected_subset = map_df[cond1 | cond2]
             
             if not connected_subset.empty:
-                render_tab_content(connected_subset, "critical", is_full=True)
+                # Pass group_by_phases=False to remove cluster boxes
+                render_tab_content(connected_subset, "critical", is_full=True, group_by_phases=False)
             else:
                 st.info("No hay dependencias registradas para mostrar un flujo conectado.")
             
