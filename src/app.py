@@ -649,8 +649,8 @@ with target_tab:
             return
 
         cols = st.columns(4)
-        statuses = ["PENDING", "IN_PROGRESS", "BLOCKED", "DONE"]
-        labels = ["😴 Pendiente", "🔨 En Progreso", "🔒 Bloqueado", "✅ Listo"]
+        statuses = ["BLOCKED", "PENDING", "IN_PROGRESS", "DONE"]
+        labels = ["🔒 Bloqueado", "😴 Pendiente", "🔨 En Progreso", "✅ Listo"]
         
         # Visual Bucketing (Move Blocked Pending -> Blocked Column)
         buckets = {s: [] for s in statuses}
