@@ -266,7 +266,7 @@ with tabs[0]:
             with col1: st.markdown("### Diagrama Completo")
             with col2: 
                 orientation = st.radio("Orientación", ["Vertical (TB)", "Horizontal (LR)"], label_visibility="collapsed")
-                rank_dir = "TB" if "Vertical" in orientation else "LR"
+                rank_dir = "LR" if "Vertical" in orientation else "TB"
                 group_phases = st.checkbox("Agrupar por Fases", value=True)
             
             render_tab_content(map_df, "full", is_full=True, group_by_phases=group_phases, rankdir=rank_dir)
