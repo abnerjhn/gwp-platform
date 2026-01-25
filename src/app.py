@@ -75,7 +75,10 @@ else:
 
 # --- VIEW: DASHBOARD ---
 with tabs[0]:
-    st.header("📊 Tablero de Control del Proyecto")
+    # Header Info
+    proj_end = PROJECT_START + timedelta(days=PROJECT_DURATION*30)
+    st.header(f"📊 {PROJECT_NAME}")
+    st.caption(f"📅 Del: {PROJECT_START.strftime('%d/%m/%Y')} | Al: {proj_end.strftime('%d/%m/%Y')} (Estimado)")
     
     # metrics
     d_df = get_table_df("activities")
