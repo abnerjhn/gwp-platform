@@ -159,32 +159,23 @@ with tabs[0]:
                                     var svgElement = container.querySelector('svg');
                                     var panZoom = null;
                                     
-                                    function triggerDownload() {{
-                                        // Get SVG content
-                                        // We need the raw XML
-                                        var serializer = new XMLSerializer();
-                                        var source = serializer.serializeToString(svgElement);
-                                        
-                                        // Add name spaces
-                                        if(!source.match(/^<svg[^>]+xmlns="http\\:\\/\\/www\\.w3\\.org\\/2000\\/svg"/)){{
-                                            source = source.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
-                                        }}
-                                        if(!source.match(/^<svg[^>]+"http\\:\\/\\/www\\.w3\\.org\\/1999\\/xlink"/)){{
-                                            source = source.replace(/^<svg/, '<svg xmlns:xlink="http://www.w3.org/1999/xlink"');
-                                        }}
+                                    function triggerDownload() {
+                                        // Get ORIGINAL, PRISTINE SVG content (High Res)
+                                        // We read it from the hidden script block to avoid the pan-zoom group transforms
+                                        var rawContent = document.getElementById('raw_svg_data').textContent;
                                         
                                         // Create file
-                                        var blob = new Blob([source], {{type: "image/svg+xml;charset=utf-8"}});
+                                        var blob = new Blob([rawContent], {type: "image/svg+xml;charset=utf-8"});
                                         var url = URL.createObjectURL(blob);
                                         
                                         // Download link
                                         var downloadLink = document.createElement("a");
                                         downloadLink.href = url;
-                                        downloadLink.download = "mapa_proceso.svg";
+                                        downloadLink.download = "mapa_proceso_full.svg";
                                         document.body.appendChild(downloadLink);
                                         downloadLink.click();
                                         document.body.removeChild(downloadLink);
-                                    }}
+                                    }
 
                                     function init() {{
                                         if (panZoom) return;
