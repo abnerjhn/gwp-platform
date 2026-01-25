@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta, date
 from db import init_connection, get_table_df, upsert_data, get_project_meta, update_project_meta, update_activity_status_flow, seed_master_defaults, seed_activities_from_csv, upload_evidence, get_evidence_by_activity, get_evidence_url, get_all_evidence, delete_evidence
-from logic import check_dependencies_blocking, check_is_blocked, update_activity_status, get_dashboard_metrics, move_mechanism_stage, generate_graphviz_dot, PHASES_CONFIG
+from logic import check_dependencies_blocking, check_is_blocked, check_can_complete, update_activity_status, get_dashboard_metrics, move_mechanism_stage, generate_graphviz_dot, PHASES_CONFIG
 from components import render_kanban_card, render_mechanism_card, render_gantt_chart
 
 st.set_page_config(page_title="GWP Platform", layout="wide", page_icon="🌐")
