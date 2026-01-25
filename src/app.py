@@ -817,7 +817,8 @@ if st.session_state['role'] == 'ADMIN':
 
 # --- VIEW: FACTORY (KANBAN) ---
 # Logic: Show tasks in columns based on Status. Buttons to move.
-target_tab = tabs[1] if st.session_state['role'] == 'ADMIN' else tabs[1] 
+# --- VIEW: ACTIVITIES BOARD ---
+target_tab = tabs[2] 
 
 with target_tab:
     st.subheader("📋 Tablero de Actividades")
