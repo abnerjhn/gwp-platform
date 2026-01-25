@@ -262,7 +262,7 @@ with tabs[0]:
             with c4:
                 st.write("")
                 st.write("")
-                only_connected = st.checkbox("Solo Conexiones", value=False)
+                only_connected = st.checkbox("Solo Conexiones", value=True)
         
         st.divider()
         
