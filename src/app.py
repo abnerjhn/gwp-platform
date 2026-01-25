@@ -98,45 +98,14 @@ with tabs[0]:
         try:
             dot = generate_graphviz_dot(map_df)
             if dot:
-                # 1. Get raw DOT string
-                dot_source = dot.source
-                
-                # 2. Escape for JS injection
-                import json
-                json_dot = json.dumps(dot_source)
-                
-                # 3. Client-Side Rendering with d3-graphviz (Includes Zoom/Pan)
-                # Robust solution for both Local and Cloud (No server-side binary needed for render)
-                html_code = f"""
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <script src="https://d3js.org/d3.v5.min.js"></script>
-                    <script src="https://unpkg.com/@hpcc-js/wasm@0.3.11/dist/index.min.js"></script>
-                    <script src="https://unpkg.com/d3-graphviz@3.0.5/build/d3-graphviz.js"></script>
-                </head>
-                <body style="margin:0; padding:0; overflow:hidden;">
-                    <div id="graph" style="text-align: center; width: 100%; height: 600px;"></div>
-                    <script>
-                        var dotSource = {json_dot};
-                        d3.select("#graph")
-                          .graphviz()
-                          .width("100%")
-                          .height(600)
-                          .fit(true)
-                          .zoom(true)
-                          .renderDot(dotSource);
-                    </script>
-                </body>
-                </html>
-                """
-                components.html(html_code, height=620, scrolling=False)
-                
+                # Fallback to Server-Side Rendering (Stable) due to CORS issues with Client-Side libraries
+                st.graphviz_chart(dot, use_container_width=True)
+                st.caption("Nota: Vista estática por compatibilidad y seguridad en la nube.")
             else:
                 st.info("Sin datos para graficar.")
         except Exception as e:
             st.error(f"Error generando gráfico: {e}")
-            st.caption("Detalle técnico: Error en lógica de graficado.")
+            st.caption("Nota: Para ver este gráfico, el servidor necesita instalar 'graphviz' (packages.txt).")
     else:
         st.warning("No hay datos para generar el mapa.")
 
