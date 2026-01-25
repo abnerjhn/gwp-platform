@@ -694,12 +694,33 @@ if st.session_state['role'] == 'ADMIN':
                 if s: st.success(m); st.rerun()
                 else: st.error(m)
                 
-            if st.button("📥 Importar Actividades desde CSV"):
-                # Path hardcoded as per user context
-                csv_path = r"c:\web_antigravity\GWP\Datos\matriz_actividades_integradas.csv"
-                s, m = seed_activities_from_csv(csv_path)
-                if s: st.success(m)
-                else: st.error(m)
+            st.divider()
+            st.markdown("##### 📥 Importar Actividades desde CSV")
+            uploaded_csv = st.file_uploader("Seleccionar archivo CSV", type=['csv'], key="csv_uploader")
+            
+            if uploaded_csv is not None:
+                st.info(f"Archivo seleccionado: **{uploaded_csv.name}**")
+                if st.button("🚀 Procesar e Importar CSV"):
+                    try:
+                        # Save temp file and process
+                        import tempfile
+                        import os
+                        with tempfile.NamedTemporaryFile(delete=False, suffix='.csv') as tmp:
+                            tmp.write(uploaded_csv.getvalue())
+                            tmp_path = tmp.name
+                        
+                        s, m = seed_activities_from_csv(tmp_path)
+                        
+                        # Cleanup
+                        os.unlink(tmp_path)
+                        
+                        if s: 
+                            st.success(m)
+                            st.rerun()
+                        else: 
+                            st.error(m)
+                    except Exception as e:
+                        st.error(f"Error: {e}")
 
         st.divider()
         st.divider()
