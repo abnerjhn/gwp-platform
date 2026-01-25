@@ -104,20 +104,88 @@ with tabs[0]:
                         # Custom Scrollable Container
                         # We use 100% width/height for the inner SVG to respect its viewport, 
                         # but the container has overflow:auto to show scrollbars.
+                        # Custom Interactive Container using svg-pan-zoom
                         html_code = f"""
-                        <div style="
-                            width: 100%; 
-                            height: 100%; 
-                            overflow: auto; 
-                            background-color: white; 
-                            padding: 20px; 
-                            border-radius: 8px; 
-                            border: 1px solid #e0e0e0;
-                            display: flex;
-                            justify_content: center;
-                        ">
-                            {svg}
-                        </div>
+                        <!DOCTYPE html>
+                        <html>
+                        <head>
+                            <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
+                            <style>
+                                body, html {{ margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; }}
+                                #container {{
+                                    width: 100%;
+                                    height: 100vh;
+                                    border: 1px solid #e0e0e0;
+                                    background-color: white;
+                                    position: relative;
+                                }}
+                                .controls {{
+                                    position: absolute;
+                                    bottom: 20px;
+                                    right: 20px;
+                                    z-index: 100;
+                                    display: flex;
+                                    flex-direction: column;
+                                    gap: 8px;
+                                    background: rgba(255, 255, 255, 0.9);
+                                    padding: 8px;
+                                    border-radius: 8px;
+                                    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+                                }}
+                                .btn {{
+                                    width: 30px;
+                                    height: 30px;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    cursor: pointer;
+                                    background: #fff;
+                                    border: 1px solid #ccc;
+                                    border-radius: 4px;
+                                    font-family: sans-serif;
+                                    font-size: 18px;
+                                    font-weight: bold;
+                                    color: #333;
+                                    user-select: none;
+                                }}
+                                .btn:hover {{ background: #f0f0f0; border-color: #999; }}
+                                .reset-btn {{ font-size: 12px; height: auto; padding: 4px; }}
+                            </style>
+                        </head>
+                        <body>
+                            <div id="container">
+                                <div class="controls">
+                                    <div class="btn" onclick="panZoomInstance.zoomIn()" title="Zoom In">+</div>
+                                    <div class="btn" onclick="panZoomInstance.zoomOut()" title="Zoom Out">-</div>
+                                    <div class="btn reset-btn" onclick="panZoomInstance.resetZoom(); panZoomInstance.center();" title="Reset">⟲</div>
+                                </div>
+                                {svg}
+                            </div>
+                            <script>
+                                var svgElement = document.querySelector('#container svg');
+                                // Force 100% to let the library handle viewport
+                                svgElement.setAttribute('width', '100%');
+                                svgElement.setAttribute('height', '100%');
+                                
+                                var panZoomInstance = svgPanZoom(svgElement, {{
+                                    zoomEnabled: true,
+                                    controlIconsEnabled: false,
+                                    fit: true,
+                                    center: true,
+                                    minZoom: 0.1,
+                                    maxZoom: 10,
+                                    dblClickZoomEnabled: false // prevent interference
+                                }});
+                                
+                                // Initial fit update
+                                window.addEventListener('resize', function(){{
+                                    panZoomInstance.resize();
+                                    panZoomInstance.fit();
+                                    panZoomInstance.center();
+                                }});
+                            </script>
+                        </body>
+                        </html>
                         """
                         
                         # Render component with generous height
