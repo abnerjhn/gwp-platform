@@ -1,5 +1,9 @@
 
 
+import pandas as pd
+import graphviz
+
+
 def check_is_blocked(activity_row, all_activities_df):
     """
     Hard Lock Rule: Returns True if the parent dependency is NOT DONE.
