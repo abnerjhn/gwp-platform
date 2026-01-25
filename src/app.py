@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import altair as alt
 from datetime import datetime, timedelta, date
 from db import init_connection, get_table_df, upsert_data, get_project_meta, update_project_meta, update_activity_status_flow, seed_master_defaults, seed_activities_from_csv, upload_evidence, get_evidence_by_activity, get_evidence_url, get_all_evidence, delete_evidence, sync_activities_file_status
 from logic import check_dependencies_blocking, check_is_blocked, check_can_complete, update_activity_status, get_dashboard_metrics, move_mechanism_stage, generate_graphviz_dot, PHASES_CONFIG
@@ -127,22 +128,90 @@ with tabs[0]:
         
         st.divider()
         
-        # Row 2: Charts
+        # Row 2: Charts (Visualizations)
         c_chart1, c_chart2 = st.columns(2)
         
         with c_chart1:
             st.subheader("Estado de Actividades")
-            status_data = {
-                "Estado": ["Pendiente", "En Progreso", "Bloqueado", "Listo"],
-                "Cantidad": [real_pending_count, in_prog, blocked_count, done]
-            }
-            # Color map hack? default blue is fine
-            st.bar_chart(pd.DataFrame(status_data).set_index("Estado"))
+            # Custom Colors
+            s_data = pd.DataFrame([
+                {"Estado": "Pendiente", "Cantidad": real_pending_count, "Color": "#95a5a6"}, # Grey
+                {"Estado": "En Progreso", "Cantidad": in_prog, "Color": "#3498db"}, # Blue
+                {"Estado": "Bloqueado", "Cantidad": blocked_count, "Color": "#e74c3c"}, # Red
+                {"Estado": "Listo", "Cantidad": done, "Color": "#2ecc71"} # Green
+            ])
+            
+            c_status = alt.Chart(s_data).mark_bar().encode(
+                x=alt.X('Estado', sort=None),
+                y='Cantidad',
+                color=alt.Color('Color', scale=None),
+                tooltip=['Estado', 'Cantidad']
+            )
+            st.altair_chart(c_status, use_container_width=True)
             
         with c_chart2:
-            st.subheader("Carga por Rol")
-            role_counts = d_df['primary_role'].value_counts()
-            st.bar_chart(role_counts)
+            st.subheader("Carga por Responsable")
+            # Map Code -> Name
+            d_users = get_table_df("users")
+            role_map = dict(zip(d_users['role'], d_users['full_name'])) if not d_users.empty else {}
+            
+            # Count
+            r_counts = d_df['primary_role'].value_counts().reset_index()
+            r_counts.columns = ['Rol', 'Cantidad']
+            r_counts['Nombre'] = r_counts['Rol'].map(role_map).fillna(r_counts['Rol'])
+            
+            c_role = alt.Chart(r_counts).mark_bar().encode(
+                x=alt.X('Nombre', sort='-y', title="Responsable"),
+                y='Cantidad',
+                color=alt.Color('Nombre', legend=None),
+                tooltip=['Nombre', 'Cantidad']
+            )
+            st.altair_chart(c_role, use_container_width=True)
+            
+        st.divider()
+        
+        # Row 3: Actionable Cards
+        st.subheader("🚀 Foco de Atención")
+        c_a1, c_a2 = st.columns(2)
+        
+        with c_a1:
+            st.info("🔥 Top Cuellos de Botella (No Finalizados)")
+            # Logic: Parents that block the most pending/in-progress items
+            pending_df = d_df[~d_df['status'].isin(['DONE'])] 
+            blockers = pending_df['dependency_code'].dropna()
+            
+            if blockers.empty:
+                st.caption("No hay bloqueos activos.")
+            else:
+                top = blockers.value_counts().head(5)
+                has_content = False
+                for code, count in top.items():
+                    # Check parent status
+                    parent = d_df[d_df['activity_code'] == code]
+                    if not parent.empty and parent.iloc[0]['status'] != 'DONE':
+                        p_name = parent.iloc[0]['task_name']
+                        st.markdown(f"**{code}** ({count} dependientes)  \n_{p_name}_")
+                        has_content = True
+                
+                if not has_content: st.caption("Los bloqueos actuales dependen de tareas ya finalizadas (Revision requerida).")
+
+        with c_a2:
+            st.info("⏳ Próximos Vencimientos (7 Días)")
+            next_week = today + timedelta(days=7)
+            # Filter: Not Done AND Due in [Today, NextWeek]
+            upcoming = d_df[
+                (d_df['status'] != 'DONE') & 
+                (d_df['dash_end'] >= today) & 
+                (d_df['dash_end'] <= next_week)
+            ].sort_values('dash_end').head(5)
+            
+            if upcoming.empty:
+                st.caption("¡Todo al día! Nada vence esta semana.")
+            else:
+                for _, r in upcoming.iterrows():
+                    delta = (r['dash_end'] - today).days
+                    tag = "HOY" if delta == 0 else ("MAÑANA" if delta == 1 else f"en {delta} días")
+                    st.markdown(f"**{r['activity_code']}** ({tag}) | {r['dash_end'].strftime('%d/%m')}  \n_{r['task_name']}_")
 
 # --- VIEW: LIVE MAP ---
 # --- VIEW: LIVE MAP ---
