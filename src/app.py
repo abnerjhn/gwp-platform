@@ -127,10 +127,10 @@ with tabs[0]:
 
         # Row 1: Metrics
         m1, m2, m3, m4 = st.columns(4)
-        m1.metric("Total Actividades", total)
-        m2.metric("Progreso Global", f"{progress}%", f"{in_prog} En curso")
-        m3.metric("Bloqueadas", blocked_count, delta_color="inverse")
-        m4.metric("Retrasadas", delayed, delta_color="inverse")
+        m1.metric("Total Actividades", total, help="Conteo total de actividades en el sistema")
+        m2.metric("Progreso Global", f"{progress}%", f"{in_prog} En curso", help="% de Actividades en estado LISTO / Total")
+        m3.metric("Bloqueadas", blocked_count, delta_color="inverse", help="Suma de: \n1. Bloqueo manual \n2. Dependencia PENDIENTE no resuelta")
+        m4.metric("Retrasadas", delayed, delta_color="inverse", help="Actividades NO finalizadas con fecha de término vencida")
         
         # --- HEALTH & AUDIT METRICS ---
         weeks_total = max(1, PROJECT_DURATION * 4.33) # Avg weeks/month
@@ -172,10 +172,10 @@ with tabs[0]:
         # Row 1.5: Health Indicators
         st.caption("Salud del Proyecto y Aseguramiento")
         h1, h2, h3, h4 = st.columns(4)
-        h1.metric("Tiempo Transcurrido", f"{time_pct}%", f"Semana {int(weeks_passed)}")
-        h2.metric("Desviación Plan", f"{gap}%", "Avance vs Tiempo", delta_color="normal")
-        h3.metric("Cobertura Documental", f"{ev_rate}%", ev_help)
-        h4.metric("Última Actividad", last_up, "Archivo Reciente")
+        h1.metric("Tiempo Transcurrido", f"{time_pct}%", f"Semana {int(weeks_passed)}", help="% de duración del proyecto consumido a la fecha")
+        h2.metric("Desviación Plan", f"{gap}%", "Avance vs Tiempo", delta_color="normal", help="Diferencia: (Progreso Real - Tiempo Transcurrido). \nVerde: Adelantado \nRojo: Atrasado")
+        h3.metric("Cobertura Documental", f"{ev_rate}%", ev_help, help="% de Entregables requeridos que ya tienen archivo cargado")
+        h4.metric("Última Actividad", last_up, "Archivo Reciente", help="Fecha de la carga de evidencia más reciente")
         
         st.divider()
         
