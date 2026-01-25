@@ -105,6 +105,9 @@ with tabs[0]:
                         # We use 100% width/height for the inner SVG to respect its viewport, 
                         # but the container has overflow:auto to show scrollbars.
                         # Custom Interactive Container using svg-pan-zoom
+                        # UNIQUE ID IS CRITICAL: Streamlit might render multiple tabs, duplications of id="container" breaks JS.
+                        container_id = f"graph_container_{key_suffix}"
+                        
                         html_code = f"""
                         <!DOCTYPE html>
                         <html>
@@ -112,7 +115,7 @@ with tabs[0]:
                             <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
                             <style>
                                 body, html {{ margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; }}
-                                #container {{
+                                #{container_id} {{
                                     width: 100%;
                                     height: 100vh;
                                     border: 1px solid #e0e0e0;
@@ -121,7 +124,7 @@ with tabs[0]:
                                 }}
                                 .controls {{
                                     position: absolute;
-                                    bottom: 20px;
+                                    top: 20px;
                                     right: 20px;
                                     z-index: 100;
                                     display: flex;
@@ -153,7 +156,7 @@ with tabs[0]:
                             </style>
                         </head>
                         <body>
-                            <div id="container">
+                            <div id="{container_id}">
                                 <div class="controls">
                                     <div class="btn" onclick="panZoomInstance.zoomIn()" title="Zoom In">+</div>
                                     <div class="btn" onclick="panZoomInstance.zoomOut()" title="Zoom Out">-</div>
@@ -162,7 +165,7 @@ with tabs[0]:
                                 {svg}
                             </div>
                             <script>
-                                var svgElement = document.querySelector('#container svg');
+                                var svgElement = document.querySelector('#{container_id} svg');
                                 // Force 100% to let the library handle viewport
                                 svgElement.setAttribute('width', '100%');
                                 svgElement.setAttribute('height', '100%');
