@@ -149,7 +149,7 @@ with tabs[0]:
             
             if not connected_pool.empty:
                 # Pass group_by_phases=False to remove cluster boxes
-                render_tab_content(connected_subset=connected_pool, key_suffix="critical", is_full=True, group_by_phases=False)
+                render_tab_content(current_df=connected_pool, key_suffix="critical", is_full=True, group_by_phases=False)
             else:
                 st.info("No hay dependencias registradas para mostrar un flujo conectado.")
             
