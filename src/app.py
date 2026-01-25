@@ -793,10 +793,15 @@ with target_tab:
             
         df_co = df_acts[df_acts.apply(is_co_responsible, axis=1)]
         
-        subtab1, subtab2 = st.tabs(["👑 Mis Responsabilidades", "🤝 Co-Responsables"])
+        subtab1, subtab2, subtab3 = st.tabs(["👑 Mis Responsabilidades", "🤝 Co-Responsables", "📚 Todas"])
         
         with subtab1:
             render_content(df_primary)
             
         with subtab2:
             render_content(df_co)
+            
+        with subtab3:
+            # Combine both
+            df_all = pd.concat([df_primary, df_co]).drop_duplicates(subset=['id'])
+            render_content(df_all)
