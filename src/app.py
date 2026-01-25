@@ -159,13 +159,13 @@ with tabs[0]:
                                     var svgElement = container.querySelector('svg');
                                     var panZoom = null;
                                     
-                                    function triggerDownload() {
+                                    function triggerDownload() {{
                                         // Get ORIGINAL, PRISTINE SVG content (High Res)
                                         // We read it from the hidden script block to avoid the pan-zoom group transforms
                                         var rawContent = document.getElementById('raw_svg_data').textContent;
                                         
                                         // Create file
-                                        var blob = new Blob([rawContent], {type: "image/svg+xml;charset=utf-8"});
+                                        var blob = new Blob([rawContent], {{type: "image/svg+xml;charset=utf-8"}});
                                         var url = URL.createObjectURL(blob);
                                         
                                         // Download link
@@ -175,7 +175,7 @@ with tabs[0]:
                                         document.body.appendChild(downloadLink);
                                         downloadLink.click();
                                         document.body.removeChild(downloadLink);
-                                    }
+                                    }}
 
                                     function init() {{
                                         if (panZoom) return;
