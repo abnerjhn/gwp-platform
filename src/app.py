@@ -112,6 +112,7 @@ with tabs[0]:
                         <!DOCTYPE html>
                         <html>
                         <head>
+                            <!-- Load library -->
                             <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
                             <style>
                                 body, html {{ margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; }}
@@ -158,34 +159,76 @@ with tabs[0]:
                         <body>
                             <div id="{container_id}">
                                 <div class="controls">
-                                    <div class="btn" onclick="panZoomInstance.zoomIn()" title="Zoom In">+</div>
-                                    <div class="btn" onclick="panZoomInstance.zoomOut()" title="Zoom Out">-</div>
-                                    <div class="btn reset-btn" onclick="panZoomInstance.resetZoom(); panZoomInstance.center();" title="Reset">⟲</div>
+                                    <div class="btn zoom-in" title="Zoom In">+</div>
+                                    <div class="btn zoom-out" title="Zoom Out">-</div>
+                                    <div class="btn reset-btn reset" title="Reset">⟲</div>
                                 </div>
                                 {svg}
                             </div>
                             <script>
-                                var svgElement = document.querySelector('#{container_id} svg');
-                                // Force 100% to let the library handle viewport
-                                svgElement.setAttribute('width', '100%');
-                                svgElement.setAttribute('height', '100%');
-                                
-                                var panZoomInstance = svgPanZoom(svgElement, {{
-                                    zoomEnabled: true,
-                                    controlIconsEnabled: false,
-                                    fit: true,
-                                    center: true,
-                                    minZoom: 0.1,
-                                    maxZoom: 10,
-                                    dblClickZoomEnabled: false // prevent interference
-                                }});
-                                
-                                // Initial fit update
-                                window.addEventListener('resize', function(){{
-                                    panZoomInstance.resize();
-                                    panZoomInstance.fit();
-                                    panZoomInstance.center();
-                                }});
+                                (function() {{
+                                    var container = document.getElementById('{container_id}');
+                                    var svgElement = container.querySelector('svg');
+                                    var panZoom = null;
+                                    
+                                    function init() {{
+                                        // Avoid double init
+                                        if (panZoom) return;
+                                        // Avoid init on hidden element (causes Matrix error)
+                                        if (container.clientWidth === 0 || container.clientHeight === 0) return;
+                                        
+                                        // Force full size
+                                        svgElement.setAttribute('width', '100%');
+                                        svgElement.setAttribute('height', '100%');
+                                        
+                                        try {{
+                                            panZoom = svgPanZoom(svgElement, {{
+                                                zoomEnabled: true,
+                                                controlIconsEnabled: false,
+                                                fit: true,
+                                                center: true,
+                                                minZoom: 0.1,
+                                                maxZoom: 10,
+                                                dblClickZoomEnabled: false
+                                            }});
+                                            
+                                            // Bind Controls
+                                            container.querySelector('.zoom-in').addEventListener('click', function() {{ panZoom.zoomIn(); }});
+                                            container.querySelector('.zoom-out').addEventListener('click', function() {{ panZoom.zoomOut(); }});
+                                            container.querySelector('.reset').addEventListener('click', function() {{ 
+                                                panZoom.resetZoom(); 
+                                                panZoom.center(); 
+                                            }});
+                                            
+                                            // Resize handler
+                                            window.addEventListener('resize', function() {{
+                                                if(panZoom) {{ panZoom.resize(); panZoom.fit(); panZoom.center(); }}
+                                            }});
+                                            
+                                        }} catch(e) {{
+                                            console.error("PanZoom Init Error:", e);
+                                        }}
+                                    }}
+                                    
+                                    // Use ResizeObserver to detect when tab becomes visible
+                                    if (window.ResizeObserver) {{
+                                        var ro = new ResizeObserver(function(entries) {{
+                                            for (var i = 0; i < entries.length; i++) {{
+                                                if (entries[i].contentRect.width > 0) {{
+                                                    init();
+                                                }}
+                                            }}
+                                        }});
+                                        ro.observe(container);
+                                    }} else {{
+                                        // Fallback for ancient browsers
+                                        setTimeout(init, 500); 
+                                        setTimeout(init, 2000);
+                                    }}
+                                    
+                                    // Try immediate init
+                                    init();
+                                }})()
                             </script>
                         </body>
                         </html>
