@@ -121,8 +121,13 @@ def generate_graphviz_dot(df, group_by_phases=True, rankdir='TB'):
         
         # Label & Tooltip
         full_name = row['task_name']
-        resp_name = row.get('responsible_name', role)
-        if pd.isna(resp_name) or resp_name == '': resp_name = role
+        
+        # Try to find a human name in co_responsibles, fallback to Role
+        human_names = row.get('co_responsibles')
+        if not pd.isna(human_names) and str(human_names).strip() not in ['', '-', 'None']:
+            resp_name = str(human_names).strip()
+        else:
+            resp_name = role
         
         wk = row.get('week_start', '?')
         tooltip = f"{full_name}\nResponsable: {resp_name}\nSemana: {wk}\nEstado: {status}"

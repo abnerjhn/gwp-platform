@@ -332,9 +332,9 @@ with tabs[0]:
                 
                 full_view_df = analysis_df[is_valid_child | is_valid_parent].copy()
 
-            # 3. Apply Sorting (ALWAYS BY WEEK/DATE)
+            # 3. Apply Sorting (ALWAYS BY WEEK/DATE + INTERNAL ID)
             if not full_view_df.empty:
-                full_view_df = full_view_df.sort_values(['week_start', 'activity_code'])
+                full_view_df = full_view_df.sort_values(['week_start', 'id'])
             
             render_tab_content(full_view_df, "full", is_full=True, group_by_phases=group_phases, rankdir=rank_dir)
 
