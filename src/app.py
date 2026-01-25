@@ -143,9 +143,9 @@ with tabs[0]:
         files_ref = get_all_evidence()
         acts_with_files = set(f['activity_code'] for f in files_ref) if files_ref else set()
         
-        # Filter: Evidence Required (Safeguard for missing column)
-        if 'evidence_description' in d_df.columns:
-            req_mask = (d_df['evidence_description'].notna()) & (d_df['evidence_description'] != '-') & (d_df['evidence_description'] != '')
+        # Filter: Evidence Required (use evidence_requirement = 'SI')
+        if 'evidence_requirement' in d_df.columns:
+            req_mask = d_df['evidence_requirement'].astype(str).str.upper() == 'SI'
             req_df = d_df[req_mask]
             total_req = len(req_df)
         else:
@@ -158,8 +158,8 @@ with tabs[0]:
             ev_rate = int((have_files_count / total_req) * 100)
             ev_help = f"{have_files_count} de {total_req} entregables"
         else:
-            ev_rate = 100
-            ev_help = "Sin requisitos (Columna no encontrada)" if 'evidence_description' not in d_df.columns else "Sin requisitos definidos"
+            ev_rate = 0 if 'evidence_requirement' in d_df.columns else 100
+            ev_help = "Sin requisitos marcados" if 'evidence_requirement' in d_df.columns else "Columna no encontrada"
             
         # Recent Activity
         last_up = "-"
