@@ -143,10 +143,14 @@ with tabs[0]:
         files_ref = get_all_evidence()
         acts_with_files = set(f['activity_code'] for f in files_ref) if files_ref else set()
         
-        # Filter: Evidence Required (Not '-' or Empty)
-        req_mask = (d_df['evidence_description'].notna()) & (d_df['evidence_description'] != '-') & (d_df['evidence_description'] != '')
-        req_df = d_df[req_mask]
-        total_req = len(req_df)
+        # Filter: Evidence Required (Safeguard for missing column)
+        if 'evidence_description' in d_df.columns:
+            req_mask = (d_df['evidence_description'].notna()) & (d_df['evidence_description'] != '-') & (d_df['evidence_description'] != '')
+            req_df = d_df[req_mask]
+            total_req = len(req_df)
+        else:
+            total_req = 0
+            req_df = pd.DataFrame()
         
         if total_req > 0:
             # Count actual matches
@@ -155,7 +159,7 @@ with tabs[0]:
             ev_help = f"{have_files_count} de {total_req} entregables"
         else:
             ev_rate = 100
-            ev_help = "Sin requisitos"
+            ev_help = "Sin requisitos (Columna no encontrada)" if 'evidence_description' not in d_df.columns else "Sin requisitos definidos"
             
         # Recent Activity
         last_up = "-"
