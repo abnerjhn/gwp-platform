@@ -65,9 +65,9 @@ with st.sidebar:
 # --- TABS ---
 # --- TABS ---
 if st.session_state['role'] == 'ADMIN':
-    tabs = st.tabs(["🗺️ Proceso Estático", "🚀 Actividades", "📂 Archivos", "📅 Planificación (CMS)", "⚙️ Configuración"])
+    tabs = st.tabs(["🔀 Proceso Estático", "🚀 Actividades", "📂 Archivos", "📅 Planificación (CMS)", "⚙️ Configuración"])
 else:
-    tabs = st.tabs(["🗺️ Proceso Estático", "🚀 Actividades", "📂 Archivos", "📋 Mis Tareas"])
+    tabs = st.tabs(["🔀 Proceso Estático", "🚀 Actividades", "📂 Archivos", "📋 Mis Tareas"])
 
 # --- VIEW: LIVE MAP ---
 # --- VIEW: LIVE MAP ---
@@ -242,7 +242,7 @@ with tabs[0]:
         # Just one main view now
         
         # --- VIEW: PROCESS MAP (Previously Full View) ---
-        st.markdown("### 🗺️ Mapa de Procesos Integrado")
+        st.markdown("### 🔀 Mapa de Procesos Integrado")
         
         # Controls Bar
         with st.container():
