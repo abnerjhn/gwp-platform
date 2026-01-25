@@ -135,17 +135,24 @@ with tabs[0]:
             analysis_df['clean_dep'] = analysis_df['dependency_code'].apply(normalize_dep)
             
             # 2. Identify Parents (nodes that are pointed to)
-            parent_codes = set(analysis_df['clean_dep'].dropna().unique())
+            # CRITICAL FIX: Only consider dependencies that ACTUALLY EXIST in the dataset
+            # Otherwise, a node pointing to a non-existent parent appears loose (edge not drawn) but passes the filter.
+            
+            valid_codes = set(analysis_df['activity_code'].astype(str).unique())
+            
+            # Filter dependencies: Keep only those that point to a valid code
+            analysis_df['valid_dep'] = analysis_df['clean_dep'].apply(lambda x: x if x in valid_codes else None)
             
             # 3. Apply Conditions
-            # cond1: Logic "I have a parent" (I am a child)
-            has_parent = analysis_df['clean_dep'].notna()
+            # cond1: I am a child of a VALID parent
+            is_valid_child = analysis_df['valid_dep'].notna()
             
-            # cond2: Logic "I am a parent" (Someone points to me)
-            is_parent = analysis_df['activity_code'].isin(parent_codes)
+            # cond2: I am a parent of a VALID child (someone points to me using a valid ref)
+            valid_parents = set(analysis_df['valid_dep'].dropna().unique())
+            is_valid_parent = analysis_df['activity_code'].astype(str).isin(valid_parents)
             
-            # Keep nodes that are part of a relationship (either side)
-            connected_pool = analysis_df[has_parent | is_parent].copy()
+            # Keep nodes that are part of a VALID COMPLETED relationship (either side)
+            connected_pool = analysis_df[is_valid_child | is_valid_parent].copy()
             
             if not connected_pool.empty:
                 # Pass group_by_phases=False to remove cluster boxes
