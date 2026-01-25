@@ -104,17 +104,20 @@ with tabs[0]:
             
         progress = int((done / total) * 100) if total > 0 else 0
         
-        # Delayed Calc
+        # Date Calc (Start & End)
         today = datetime.now().date()
-        def get_end_date_dash(row):
+        def get_dates_dash(row):
             try:
+                ws = int(row.get('week_start') or 1)
                 we = int(row.get('week_end') or 1)
+                real_s = PROJECT_START + timedelta(weeks=ws-1)
                 real_e = PROJECT_START + timedelta(weeks=we) - timedelta(days=1)
-                return real_e
+                return pd.Series([real_s, real_e])
             except:
-                return PROJECT_START
-        
-        d_df['dash_end'] = d_df.apply(get_end_date_dash, axis=1)
+                return pd.Series([PROJECT_START, PROJECT_START])
+
+        d_df[['dash_start', 'dash_end']] = d_df.apply(get_dates_dash, axis=1)
+        d_df['dash_start'] = pd.to_datetime(d_df['dash_start']).dt.date
         d_df['dash_end'] = pd.to_datetime(d_df['dash_end']).dt.date
         
         delayed = len(d_df[(d_df['dash_end'] < today) & (d_df['status'] != 'DONE')])
@@ -195,14 +198,25 @@ with tabs[0]:
                     parent = d_df[d_df['activity_code'] == code]
                     if not parent.empty and parent.iloc[0]['status'] != 'DONE':
                         p_row = parent.iloc[0]
-                        p_name = p_row['task_name']
-                        p_resp = role_map_ref.get(p_row['primary_role'], p_row['primary_role'])
-                        p_date = p_row['dash_end'].strftime('%d/%m')
                         
-                        st.markdown(f"**{code}** ({count} deps) | 👤 {p_resp} | 📅 {p_date}  \n_{p_name}_")
+                        # Prep Info
+                        d_range = f"{p_row['dash_start'].strftime('%d/%m')} - {p_row['dash_end'].strftime('%d/%m')}"
+                        primary = role_map_ref.get(p_row['primary_role'], p_row['primary_role'])
+                        
+                        co_raw = str(p_row.get('co_responsibles', ''))
+                        # Clean split
+                        co_list = [c.strip() for c in co_raw.split(',') if c.strip() and c.strip() not in ['nan', 'None']]
+                        co_names = [role_map_ref.get(r, r) for r in co_list]
+                        co_str = ", ".join(co_names) if co_names else "-"
+
+                        with st.container(border=True):
+                            st.markdown(f"**{code}** ({count} deps) | `{p_row['status']}`")
+                            st.markdown(f"📅 {d_range}")
+                            st.caption(f"👤 **{primary}** | 🤝 {co_str}")
+                            st.caption(f"_{p_row['task_name']}_")
                         has_content = True
                 
-                if not has_content: st.caption("Los bloqueos actuales dependen de tareas ya finalizadas (Revision requerida).")
+                if not has_content: st.caption("Los bloqueos actuales dependen de tareas ya finalizadas (Estable).")
 
         with c_a2:
             st.info("⏳ Próximos Vencimientos (7 Días)")
@@ -220,9 +234,20 @@ with tabs[0]:
                 for _, r in upcoming.iterrows():
                     delta = (r['dash_end'] - today).days
                     tag = "HOY" if delta == 0 else ("MAÑANA" if delta == 1 else f"en {delta} días")
-                    r_resp = role_map_ref.get(r['primary_role'], r['primary_role'])
                     
-                    st.markdown(f"**{r['activity_code']}** ({tag}) | 📅 {r['dash_end'].strftime('%d/%m')} | 👤 {r_resp}  \n_{r['task_name']}_")
+                    d_range = f"{r['dash_start'].strftime('%d/%m')} - {r['dash_end'].strftime('%d/%m')}"
+                    primary = role_map_ref.get(r['primary_role'], r['primary_role'])
+                    
+                    co_raw = str(r.get('co_responsibles', ''))
+                    co_list = [c.strip() for c in co_raw.split(',') if c.strip() and c.strip() not in ['nan', 'None']]
+                    co_names = [role_map_ref.get(x, x) for x in co_list]
+                    co_str = ", ".join(co_names) if co_names else "-"
+                    
+                    with st.container(border=True):
+                        st.markdown(f"**{r['activity_code']}** ({tag}) | `{r['status']}`")
+                        st.markdown(f"📅 {d_range}")
+                        st.caption(f"👤 **{primary}** | 🤝 {co_str}")
+                        st.caption(f"_{r['task_name']}_")
 
 # --- VIEW: LIVE MAP ---
 # --- VIEW: LIVE MAP ---
