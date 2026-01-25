@@ -67,7 +67,7 @@ with st.sidebar:
 if st.session_state['role'] == 'ADMIN':
     tabs = st.tabs(["🔀 Mapa de Procesos", "📋 Actividades", "📂 Archivos", "📅 Planificación (CMS)", "⚙️ Configuración"])
 else:
-    tabs = st.tabs(["🔀 Mapa de Procesos", "📋 Actividades", "📂 Archivos", "📋 Mis Tareas"])
+    tabs = st.tabs(["🔀 Mapa de Procesos", "📋 Actividades", "📋 Mis Tareas", "📂 Archivos"])
 
 # --- VIEW: LIVE MAP ---
 # --- VIEW: LIVE MAP ---
@@ -809,7 +809,7 @@ with target_tab:
 
 # --- VIEW: MY TASKS (USER ONLY) ---
 if st.session_state['role'] != 'ADMIN':
-    with tabs[3]:
+    with tabs[2]:
         st.header("📋 Tablero de Prioridades Personales")
         
         df_all_tasks = get_table_df("activities")
