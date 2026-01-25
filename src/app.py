@@ -64,9 +64,9 @@ with st.sidebar:
 # --- TABS ---
 # --- TABS ---
 if st.session_state['role'] == 'ADMIN':
-    tabs = st.tabs(["🗺️ Mapa Vivo", "🚀 Actividades", "📂 Archivos", "📅 Planificación (CMS)", "⚙️ Configuración"])
+    tabs = st.tabs(["🗺️ Proceso Estático", "🚀 Actividades", "📂 Archivos", "📅 Planificación (CMS)", "⚙️ Configuración"])
 else:
-    tabs = st.tabs(["🗺️ Mapa Vivo", "🚀 Actividades", "📂 Archivos", "📋 Mis Tareas"])
+    tabs = st.tabs(["🗺️ Proceso Estático", "🚀 Actividades", "📂 Archivos", "📋 Mis Tareas"])
 
 # --- VIEW: LIVE MAP ---
 # --- VIEW: LIVE MAP ---
@@ -81,7 +81,7 @@ with tabs[0]:
         # Create Tabs for each Phase + Full View + Critical Path
         phase_tabs_names = [p['name'] for p in PHASES_CONFIG.values()]
         phase_tabs_names.append("🔭 VISTA COMPLETA")
-        phase_tabs_names.append("🔗 PROCESO ESTÁTICO")
+        phase_tabs_names.append("🔗 RUTA CRÍTICA")
         
         # Create Streamlit Tabs
         subtabs = st.tabs(phase_tabs_names)
@@ -120,7 +120,7 @@ with tabs[0]:
 
         # 3. Critical Path / Connected View
         with subtabs[-1]:
-            st.markdown("### 🔗 Proceso Estático (Flujo Lógico)")
+            st.markdown("### 🔗 Ruta Crítica (Solo Conexiones)")
             # Filter: Nodes that have dependencies OR are dependencies of others
             # 1. Get List of all dependency codes
             all_deps = map_df['dependency_code'].unique().tolist()
