@@ -66,6 +66,8 @@ with st.sidebar:
 # --- TABS ---
 if st.session_state['role'] == 'ADMIN':
     tabs = st.tabs(["🔀 Mapa de Procesos", "📋 Actividades", "📂 Archivos", "📅 Planificación (CMS)", "⚙️ Configuración"])
+elif st.session_state['role'] == 'GOBIERNO':
+    tabs = st.tabs(["🔀 Mapa de Procesos", "📋 Actividades", "📂 Archivos"])
 else:
     tabs = st.tabs(["🔀 Mapa de Procesos", "📋 Actividades", "📋 Mis Tareas", "📂 Archivos"])
 
@@ -323,7 +325,7 @@ with tabs[0]:
 
 # --- VIEW: FILE MANAGER ---
 # Common for all
-file_tab_idx = 2 if st.session_state['role'] == 'ADMIN' else 3
+file_tab_idx = 2 if st.session_state['role'] in ['ADMIN', 'GOBIERNO'] else 3
 with tabs[file_tab_idx]:
     st.header("📂 Gestor Documental Centralizado")
     
@@ -777,6 +779,11 @@ with target_tab:
 
     if current_role == 'ADMIN':
         render_content(df_acts)
+    elif current_role == 'GOBIERNO':
+        # GOBIERNO View: All activities (except ADMIN) without subtabs
+        st.info("Vista de Supervisión Gubernamental (Todas las Actividades)")
+        df_gov = df_acts[df_acts['primary_role'] != 'ADMIN']
+        render_content(df_gov, "gov_all")
     else:
         # Find user name
         curr_user_rows = users_df[users_df['role'] == current_role]
@@ -809,13 +816,9 @@ with target_tab:
             render_content(df_all, "user_all")
 
 # --- VIEW: MY TASKS (USER ONLY) ---
-if st.session_state['role'] != 'ADMIN':
+if st.session_state['role'] not in ['ADMIN', 'GOBIERNO']:
     with tabs[2]:
-        if st.session_state['role'] == 'GOBIERNO':
-            st.header("📋 Tablero de Supervisión (Gobierno)")
-            st.caption("Visualizando actividades de todos los usuarios (Excepto Admin)")
-        else:
-            st.header("📋 Tablero de Prioridades Personales")
+        st.header("📋 Tablero de Prioridades Personales")
         
         df_all_tasks = get_table_df("activities")
         users_df = get_table_df("users")
