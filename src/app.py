@@ -78,9 +78,10 @@ with tabs[0]:
     map_df = get_table_df("activities")
     
     if not map_df.empty:
-        # Create Tabs for each Phase + Full View
+        # Create Tabs for each Phase + Full View + Critical Path
         phase_tabs_names = [p['name'] for p in PHASES_CONFIG.values()]
         phase_tabs_names.append("🔭 VISTA COMPLETA")
+        phase_tabs_names.append("🔗 RUTA CRÍTICA")
         
         # Create Streamlit Tabs
         subtabs = st.tabs(phase_tabs_names)
@@ -113,9 +114,30 @@ with tabs[0]:
                 render_tab_content(subset, f"p{p_id}")
 
         # 2. Render Full View (Last Tab)
-        with subtabs[-1]:
+        with subtabs[-2]: # Now second to last
             st.markdown("### Diagrama Completo")
             render_tab_content(map_df, "full", is_full=True)
+
+        # 3. Critical Path / Connected View
+        with subtabs[-1]:
+            st.markdown("### 🔗 Flujo de Dependencias (Solo Conectadas)")
+            # Filter: Nodes that have dependencies OR are dependencies of others
+            # 1. Get List of all dependency codes
+            all_deps = map_df['dependency_code'].unique().tolist()
+            # Clean list
+            all_deps = [d for d in all_deps if d and d != '-' and d != 'nan']
+            
+            # Condition 1: Has a dependency
+            cond1 = map_df['dependency_code'].notna() & (map_df['dependency_code'] != '-') & (map_df['dependency_code'] != '')
+            # Condition 2: Is a dependency (code is in all_deps)
+            cond2 = map_df['activity_code'].isin(all_deps)
+            
+            connected_subset = map_df[cond1 | cond2]
+            
+            if not connected_subset.empty:
+                render_tab_content(connected_subset, "critical", is_full=True)
+            else:
+                st.info("No hay dependencias registradas para mostrar un flujo conectado.")
             
     else:
         st.warning("No hay datos para generar el mapa.")
