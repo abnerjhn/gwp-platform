@@ -279,7 +279,8 @@ with tabs[0]:
                     # Apply previous swap fix: Vertical->LR, Horizontal->TB
                     rank_dir = "LR" if "Vertical" in orientation else "TB"
                 with c2:
-                    sort_opt = st.selectbox("Orden Nodos", ["Original", "Por ID", "Por Fecha"])
+                    st.write("") # Spacer (Sorting option removed, always by Date)
+                    st.caption("✅ Orden: Semanal")
                 with c3:
                     st.write("") # Spacer
                     st.write("")
@@ -331,12 +332,9 @@ with tabs[0]:
                 
                 full_view_df = analysis_df[is_valid_child | is_valid_parent].copy()
 
-            # 3. Apply Sorting
+            # 3. Apply Sorting (ALWAYS BY WEEK/DATE)
             if not full_view_df.empty:
-                if sort_opt == "Por ID":
-                    full_view_df = full_view_df.sort_values('id')
-                elif sort_opt == "Por Fecha":
-                    full_view_df = full_view_df.sort_values(['week_start', 'activity_code'])
+                full_view_df = full_view_df.sort_values(['week_start', 'activity_code'])
             
             render_tab_content(full_view_df, "full", is_full=True, group_by_phases=group_phases, rankdir=rank_dir)
 
