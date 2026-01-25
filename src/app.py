@@ -541,7 +541,7 @@ if st.session_state['role'] == 'ADMIN':
 target_tab = tabs[1] if st.session_state['role'] == 'ADMIN' else tabs[1] 
 
 with target_tab:
-    st.subheader("Tablero de Actividades")
+    st.subheader("📋 Tablero de Actividades")
     
     df_acts = get_table_df("activities")
     users_df = get_table_df("users")
