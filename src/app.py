@@ -261,8 +261,7 @@ with tabs[0]:
                 render_tab_content(subset, f"p{p_id}")
 
         # 2. Render Full View (Last Tab)
-        with subtabs[-2]: # Now second to last
-        # 2. Render Full View (Last Tab)
+
         with subtabs[-2]: # Now second to last
             st.markdown("### Diagrama Completo")
             
