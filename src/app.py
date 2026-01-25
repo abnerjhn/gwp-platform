@@ -731,6 +731,19 @@ if st.session_state['role'] == 'ADMIN':
         st.header("📅 Editor Maestro de Cronograma")
         st.info("CMS Integrado: Las opciones de Productos y Usuarios vienen de la DB.")
         
+        # --- HELP: Type Codes ---
+        with st.expander("❓ Guía de Códigos de TIPO", expanded=False):
+            st.markdown("""
+| Código | Nombre | Descripción |
+|--------|--------|-------------|
+| **INT** | Integrada | Actividad que involucra a más de una consultoría/rol o que produce un resultado que alimenta directamente a varias (ej: talleres, validación con gobierno, QA). |
+| **IND** | Individual | Actividad ejecutada principalmente por una consultoría (un responsable claro), aunque pueda usar insumos del resto. |
+| **DEP** | Dependiente | Marca que la actividad no puede comenzar o cerrarse hasta que ocurra algo previo. Se combina con INT o IND. |
+| **INT+DEP** | Integrada y Dependiente | Requiere integración y además necesita un prerequisito. Ej: talleres de co-creación que dependen de convocatoria/baseline. |
+| **IND+DEP** | Individual y Dependiente | La hace un responsable único, pero está "bloqueada" hasta que exista un insumo previo. Ej: redactar manual v0.9 depende de mecanismos aprobados. |
+| **IND-P** | Individual Pura | Actividad individual que no depende de nada externo (puede arrancar desde el día 1). Ej: benchmarking internacional. |
+""")
+        
         # Fresh Fetch - Sync Files First
         sync_activities_file_status()
         acts_df = get_table_df("activities")
