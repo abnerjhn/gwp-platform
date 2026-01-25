@@ -252,6 +252,9 @@ def upload_evidence(file_obj, activity_code, user_role):
         
         client.table("evidence_files").insert(metadata).execute()
         
+        # Sync flag
+        sync_activities_file_status()
+        
         return True, "Archivo subido correctamente."
         
     except Exception as e:
@@ -297,6 +300,49 @@ def delete_evidence(storage_path):
         # 2. Delete from DB
         client.table("evidence_files").delete().eq("storage_path", storage_path).execute()
         
+        # Sync flag
+        sync_activities_file_status()
+        
         return True, "Archivo eliminado."
     except Exception as e:
         return False, str(e)
+
+def sync_activities_file_status():
+    """
+    Synchronizes the 'has_file_uploaded' flag in activities table
+    based on actual presence of files in evidence_files.
+    """
+    client = init_connection()
+    try:
+        # 1. Get all codes that have files
+        res_files = client.table("evidence_files").select("activity_code").execute()
+        codes_with_files = set(r['activity_code'] for r in res_files.data)
+        
+        # 2. Get current status of all activities
+        res_acts = client.table("activities").select("id", "activity_code", "has_file_uploaded").execute()
+        
+        # 3. Calculate updates
+        updates_true = []
+        updates_false = []
+        
+        for act in res_acts.data:
+            code = act['activity_code']
+            current_status = act.get('has_file_uploaded', False)
+            should_have_file = code in codes_with_files
+            
+            if should_have_file and not current_status:
+                updates_true.append(act['id'])
+            elif not should_have_file and current_status:
+                updates_false.append(act['id'])
+                
+        # 4. Execute Batched Updates
+        if updates_true:
+            client.table("activities").update({"has_file_uploaded": True}).in_("id", updates_true).execute()
+        
+        if updates_false:
+            client.table("activities").update({"has_file_uploaded": False}).in_("id", updates_false).execute()
+            
+        return True
+    except Exception as e:
+        print(f"Sync Error: {e}")
+        return False

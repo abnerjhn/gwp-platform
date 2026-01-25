@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta, date
-from db import init_connection, get_table_df, upsert_data, get_project_meta, update_project_meta, update_activity_status_flow, seed_master_defaults, seed_activities_from_csv, upload_evidence, get_evidence_by_activity, get_evidence_url, get_all_evidence, delete_evidence
+from db import init_connection, get_table_df, upsert_data, get_project_meta, update_project_meta, update_activity_status_flow, seed_master_defaults, seed_activities_from_csv, upload_evidence, get_evidence_by_activity, get_evidence_url, get_all_evidence, delete_evidence, sync_activities_file_status
 from logic import check_dependencies_blocking, check_is_blocked, check_can_complete, update_activity_status, get_dashboard_metrics, move_mechanism_stage, generate_graphviz_dot, PHASES_CONFIG
 from components import render_kanban_card, render_mechanism_card, render_gantt_chart
 import streamlit.components.v1 as components
@@ -452,7 +452,8 @@ if st.session_state['role'] == 'ADMIN':
         st.header("📅 Editor Maestro de Cronograma")
         st.info("CMS Integrado: Las opciones de Productos y Usuarios vienen de la DB.")
         
-        # Fresh Fetch
+        # Fresh Fetch - Sync Files First
+        sync_activities_file_status()
         acts_df = get_table_df("activities")
         prods_df = get_table_df("contract_products")
         users_df = get_table_df("users")
