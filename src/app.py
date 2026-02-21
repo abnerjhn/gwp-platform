@@ -929,7 +929,10 @@ with target_tab:
             role_map[u['role']] = u['full_name']
             
     # Enrich DF with Name for Gantt
-    df_acts['responsible_name'] = df_acts['primary_role'].map(role_map).fillna(df_acts['primary_role'])
+    if not df_acts.empty and 'primary_role' in df_acts.columns:
+        df_acts['responsible_name'] = df_acts['primary_role'].map(role_map).fillna(df_acts['primary_role'])
+    else:
+        df_acts['responsible_name'] = ""
 
     # --- PREPARE DATE LOGIC ---
     def add_real_dates(df):
