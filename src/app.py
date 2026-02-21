@@ -797,16 +797,19 @@ if st.session_state['role'] == 'ADMIN':
         
         # --- APPLY MAPPING TO DATAFRAME FOR DISPLAY ---
         display_df = acts_df.copy()
-        display_df['product_code'] = display_df['product_code'].map(prod_map).fillna(display_df['product_code'])
+        
+        if not display_df.empty and 'product_code' in display_df.columns:
+            display_df['product_code'] = display_df['product_code'].map(prod_map).fillna(display_df['product_code'])
         
         # Fill primary_responsible from role if empty (backcompat)
-        if 'primary_responsible' not in display_df.columns:
-            display_df['primary_responsible'] = display_df['primary_role'].map(role_to_name).fillna(display_df['primary_role'])
-        else:
-            # Fill nulls
-            display_df['primary_responsible'] = display_df['primary_responsible'].fillna(
-                display_df['primary_role'].map(role_to_name)
-            )
+        if not display_df.empty and 'primary_role' in display_df.columns:
+            if 'primary_responsible' not in display_df.columns:
+                display_df['primary_responsible'] = display_df['primary_role'].map(role_to_name).fillna(display_df['primary_role'])
+            else:
+                # Fill nulls
+                display_df['primary_responsible'] = display_df['primary_responsible'].fillna(
+                    display_df['primary_role'].map(role_to_name)
+                )
         
         dep_codes = acts_df['activity_code'].tolist() if not acts_df.empty else []
 
